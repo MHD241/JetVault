@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-label="Sample aviation placeholder image 1">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#12233c"/><stop offset=".58" stop-color="#5f89b5"/><stop offset="1" stop-color="#f0a65b"/></linearGradient>
+  <radialGradient id="glow" cx="78%" cy="25%" r="35%"><stop stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  <filter id="blur"><feGaussianBlur stdDeviation="22"/></filter>
+</defs>
+<rect width="1600" height="1000" fill="url(#sky)"/>
+<rect width="1600" height="1000" fill="url(#glow)" opacity=".65"/>
+<g fill="#fff" opacity=".09" filter="url(#blur)"><ellipse cx="300" cy="300" rx="340" ry="80"/><ellipse cx="1180" cy="500" rx="420" ry="100"/></g>
+<g transform="translate(800 500) rotate(-5) scale(1.45)" fill="#0a0c10" opacity=".88">
+  <path d="M-360 20 L-85 -5 L100 -170 L142 -165 L70 -3 L332 5 L385 30 L335 50 L68 55 L145 208 L103 214 L-85 61 L-355 52 L-430 90 L-456 80 L-397 38 L-456 -2 L-430 -13 Z"/>
+</g>
+<g opacity=".45" fill="#fff"><circle cx="80" cy="90" r="2"/><circle cx="240" cy="160" r="1.6"/><circle cx="1420" cy="130" r="2"/><circle cx="1280" cy="250" r="1.5"/></g>
+<text x="72" y="910" fill="#fff" opacity=".62" font-size="26" font-family="Arial, sans-serif" letter-spacing="4">SCOTTISH.AERO · SAMPLE PHOTO 01</text>
+<text x="72" y="950" fill="#fff" opacity=".38" font-size="18" font-family="Arial, sans-serif">Replace this file with your own JPG / WEBP later</text>
+</svg>
