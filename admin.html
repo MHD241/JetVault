@@ -1,0 +1,43 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#06090d"><title>Crew Dashboard — Scottish.aero</title><link rel="icon" href="assets/images/ui/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/css/styles.css"></head>
+<body class="admin-body"><div class="cursor-glow" data-cursor-glow></div>
+<div class="admin-shell">
+  <div class="admin-topbar"><a class="brand" href="index.html"><span class="brand-mark"><svg viewBox="0 0 64 64"><path d="M8 36 27 32 39 18 43 19 37 31 54 32 58 35 54 38 37 39 43 51 39 52 27 40 8 38 4 41 2 39 6 35 2 31 4 29Z" fill="currentColor"/></svg></span><span>Scottish.aero / crew</span></a><div class="admin-topbar__actions"><span class="status-dot" data-backend-status>Backend</span><a class="ghost-button" href="index.html">View site ↗</a><button class="ghost-button" type="button" data-sign-out>Sign out</button></div></div>
+
+  <section class="auth-card" data-login-card>
+    <span class="eyebrow">Private crew access</span><h1>Dashboard.</h1><p>Sign in with your Scottish.aero username. Photograph ownership is assigned from your account automatically.</p>
+    <form class="form-grid" data-login-form>
+      <div class="field"><label for="login-user">Username</label><input class="control" id="login-user" name="username" autocomplete="username" placeholder="mohammed / ellis / arran" required></div>
+      <div class="field"><label for="login-pass">Password</label><input class="control" id="login-pass" name="password" type="password" autocomplete="current-password" required></div>
+      <div class="form-error" data-login-error></div><button class="solid-button" type="submit">Enter dashboard</button>
+    </form>
+  </section>
+
+  <main class="admin-app" data-admin-app hidden>
+    <div class="dashboard-warning" data-backend-warning hidden>Supabase is not connected. Follow SUPABASE-SETUP.md before using live accounts or uploads.</div>
+    <section class="admin-hero"><span class="eyebrow" data-profile-role>Photographer</span><h1>Hello, <span data-profile-name>crew</span>.</h1><p>Upload photographs, complete aircraft details and see how the Scottish.aero archive is being viewed.</p></section>
+    <section class="stats-grid">
+      <div class="stat-card"><span>Total page visits</span><strong data-stat-visits>—</strong></div><div class="stat-card"><span>Visits · 7 days</span><strong data-stat-week>—</strong></div><div class="stat-card"><span>Photo opens</span><strong data-stat-views>—</strong></div><div class="stat-card"><span>Published photos</span><strong data-stat-photos>—</strong></div>
+    </section>
+    <section class="admin-layout">
+      <div style="display:grid;gap:15px">
+        <article class="admin-panel"><div class="admin-panel__head"><h2>Publish photograph</h2><span class="muted" style="font-size:.7rem">Credit is automatic</span></div><div class="admin-panel__body">
+          <form class="form-grid" data-upload-form>
+            <div class="upload-drop"><b>Drop or choose a photograph</b><div class="muted" style="font-size:.72rem;margin-top:5px">JPG, PNG or WebP · max 20 MB</div><input type="file" name="photo" accept="image/*" data-upload-file required></div><div class="upload-preview" data-upload-preview></div>
+            <div class="field"><label>Registration</label><input class="control" name="registration" value="Unknown"></div>
+            <div class="field"><label>Aircraft type</label><input class="control" name="aircraft_type" placeholder="e.g. Boeing 787-9"></div>
+            <div class="field"><label>Operator / airline</label><input class="control" name="airline" placeholder="e.g. Emirates"></div>
+            <div class="field"><label>Airport</label><input class="control" name="airport" value="Unknown" placeholder="EDI / GLA / PIK / Unknown"></div>
+            <div class="field"><label>Date taken</label><input class="control" name="taken_at" type="date"></div>
+            <div class="field"><label>Caption</label><textarea class="control" name="caption" placeholder="Optional caption"></textarea></div>
+            <div class="field"><label>Image description</label><input class="control" name="alt_text" placeholder="Useful for accessibility"></div>
+            <div class="form-error" data-upload-error></div><div class="form-success" data-upload-success></div><button class="solid-button" type="submit">Publish photograph</button>
+          </form>
+        </div></article>
+        <article class="admin-panel"><div class="admin-panel__head"><h2>Account</h2></div><div class="admin-panel__body"><form class="form-grid" data-password-form><div class="field"><label>New password</label><input class="control" type="password" name="new_password" autocomplete="new-password" placeholder="10+ characters" required></div><div class="form-error" data-password-message></div><button class="outline-button" type="submit">Change password</button></form></div></article>
+      </div>
+      <article class="admin-panel"><div class="admin-panel__head"><h2>Photograph listings</h2><span class="muted" style="font-size:.7rem">Mohammed can manage all · photographers manage their own</span></div><div class="admin-panel__body"><div class="admin-photo-list" data-admin-photo-list><div class="admin-empty">Loading photographs…</div></div></div></article>
+    </section>
+  </main>
+</div>
+<dialog class="edit-dialog" data-edit-dialog><div class="edit-dialog__head"><h2>Edit photograph</h2><button class="icon-button" type="button" data-close-edit>×</button></div><div class="edit-dialog__body"><form class="form-grid" data-edit-form><input type="hidden" name="id"><div class="field"><label>Registration</label><input class="control" name="registration"></div><div class="field"><label>Aircraft type</label><input class="control" name="aircraft_type"></div><div class="field"><label>Operator / airline</label><input class="control" name="airline"></div><div class="field"><label>Airport</label><input class="control" name="airport"></div><div class="field"><label>Date taken</label><input class="control" type="date" name="taken_at"></div><div class="field"><label>Caption</label><textarea class="control" name="caption"></textarea></div><div class="field"><label>Image description</label><input class="control" name="alt_text"></div><label style="display:flex;align-items:center;gap:9px;font-size:.8rem"><input type="checkbox" name="featured"> Feature this photograph on the homepage</label><div class="form-error" data-edit-error></div><div class="edit-dialog__actions"><button class="outline-button" type="button" data-close-edit>Cancel</button><button class="solid-button" type="submit">Save changes</button></div></form></div></dialog>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/config.js"></script><script src="assets/js/data.js"></script><script src="assets/js/backend.js"></script><script src="assets/js/admin.js"></script></body></html>
