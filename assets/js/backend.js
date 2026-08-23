@@ -1,6 +1,8 @@
 (() => {
-  const fallback = window.SCOTTISH_AERO || { photographers: [], airports: [], photos: [] };
+  const fallback = window.SCOTTISH_AERO || { photographers: [], airports: [], photos: [], posts: [] };
   const cfg = window.SCOTTISH_AERO_CONFIG || {};
+  const META_PROFILE = '__SA_PROFILE__';
+  const META_POST = '__SA_POST__';
   const configured = Boolean(
     cfg.supabaseUrl && cfg.supabaseAnonKey &&
     !cfg.supabaseUrl.includes('PASTE_') &&
@@ -9,6 +11,7 @@
 
   let client = null;
   let clientPromise = null;
+  let contentPromise = null;
 
   const slugify = value => String(value || '')
     .toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -16,9 +19,11 @@
   const formatDate = value => {
     if (!value) return 'Unknown';
     try {
+      const raw = String(value);
+      const date = raw.includes('T') ? new Date(raw) : new Date(`${raw}T12:00:00`);
       return new Intl.DateTimeFormat('en-GB', {
         day: '2-digit', month: 'short', year: 'numeric'
-      }).format(new Date(`${value}T12:00:00`));
+      }).format(date);
     } catch (_) { return 'Unknown'; }
   };
 
@@ -38,6 +43,29 @@
     featured: Boolean(row.featured),
     ownerId: row.owner_id || null,
     createdAt: row.created_at || null
+  });
+
+  const rowToPost = row => ({
+    id: row.id,
+    title: row.aircraft_type && row.aircraft_type !== 'Unknown' ? row.aircraft_type : 'Crew update',
+    body: row.caption || '',
+    image: row.image_url || '',
+    imageAlt: row.alt_text || row.aircraft_type || 'Scottish.aero crew post',
+    photographer: slugify(row.photographer_name),
+    photographerName: row.photographer_name || 'Unknown',
+    createdAt: row.created_at || null,
+    date: formatDate(row.created_at),
+    ownerId: row.owner_id || null
+  });
+
+  const rowToProfileMeta = row => ({
+    photographer: slugify(row.photographer_name),
+    photographerName: row.photographer_name || 'Unknown',
+    bio: row.caption || '',
+    avatar: row.image_url || '',
+    updatedAt: row.updated_at || row.created_at || null,
+    rowId: row.id,
+    ownerId: row.owner_id || null
   });
 
   function buildClient() {
@@ -84,25 +112,75 @@
     return clientPromise;
   }
 
-  async function getPhotos() {
-    const db = await ensureClient();
-    if (!db) return fallback.photos;
-    try {
+  async function getRows({ fresh = false } = {}) {
+    if (!fresh && contentPromise) return contentPromise;
+    const task = (async () => {
+      const db = await ensureClient();
+      if (!db) return null;
       const { data, error } = await db.from('photos').select('*')
         .order('featured', { ascending: false })
         .order('sort_order', { ascending: true })
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return (data || []).map(dbPhotoToSite);
-    } catch (error) {
-      console.warn('Scottish.aero: using local photo fallback.', error.message);
-      return fallback.photos;
-    }
+      return data || [];
+    })().catch(error => {
+      console.warn('Scottish.aero: using bundled content fallback.', error.message);
+      return null;
+    });
+    if (!fresh) contentPromise = task;
+    return task;
   }
 
-  async function getData() {
-    return { photographers: fallback.photographers, airports: fallback.airports, photos: await getPhotos() };
+  function mergePhotographers(profileRows = []) {
+    const latestByPerson = new Map();
+    for (const row of profileRows) {
+      const slug = slugify(row.photographer_name);
+      if (!latestByPerson.has(slug)) latestByPerson.set(slug, rowToProfileMeta(row));
+    }
+    return (fallback.photographers || []).map(person => {
+      const meta = latestByPerson.get(person.id);
+      return meta ? {
+        ...person,
+        bio: meta.bio || person.bio,
+        avatar: meta.avatar || person.avatar || '',
+        profileRowId: meta.rowId || null
+      } : { ...person, avatar: person.avatar || '' };
+    });
   }
+
+  async function getData({ fresh = false } = {}) {
+    const rows = await getRows({ fresh });
+    if (!rows) return {
+      photographers: fallback.photographers || [],
+      airports: fallback.airports || [],
+      photos: fallback.photos || [],
+      posts: fallback.posts || []
+    };
+
+    const profileRows = rows.filter(row => row.registration === META_PROFILE);
+    const postRows = rows.filter(row => row.registration === META_POST);
+    const photoRows = rows.filter(row => row.registration !== META_PROFILE && row.registration !== META_POST);
+    return {
+      photographers: mergePhotographers(profileRows),
+      airports: fallback.airports || [],
+      photos: photoRows.map(dbPhotoToSite),
+      posts: postRows.map(rowToPost)
+    };
+  }
+
+  async function getPhotos(options) {
+    return (await getData(options)).photos;
+  }
+
+  async function getPosts(options) {
+    return (await getData(options)).posts;
+  }
+
+  async function getPhotographers(options) {
+    return (await getData(options)).photographers;
+  }
+
+  function invalidateContent() { contentPromise = null; }
 
   function runIdle(task) {
     if ('requestIdleCallback' in window) requestIdleCallback(task, { timeout: 1800 });
@@ -132,11 +210,19 @@
     client: buildClient(),
     ensureClient,
     getPhotos,
+    getPosts,
+    getPhotographers,
     getData,
+    getRows,
+    invalidateContent,
     trackVisit,
     trackPhotoView,
     slugify,
     dbPhotoToSite,
-    formatDate
+    rowToPost,
+    rowToProfileMeta,
+    formatDate,
+    META_PROFILE,
+    META_POST
   };
 })();
