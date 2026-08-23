@@ -1,10 +1,9 @@
-(async () => {
+(() => {
   const backend = window.ScottishAeroBackend;
+  const local = window.SCOTTISH_AERO;
   const grid = document.querySelector('[data-gallery-grid]');
-  if (!backend || !grid) return;
+  if (!backend || !local || !grid) return;
 
-  const data = await backend.getData();
-  const photos = data.photos;
   const search = document.querySelector('[data-gallery-search]');
   const airportFilter = document.querySelector('[data-airport-filter]');
   const airlineFilter = document.querySelector('[data-airline-filter]');
@@ -14,35 +13,32 @@
   const modal = document.querySelector('[data-lightbox]');
   const modalInner = modal?.querySelector('[data-lightbox-inner]');
   const params = new URLSearchParams(location.search);
+  const esc = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+
+  let data = local;
+  let photos = local.photos;
   let activePhoto = null;
 
-  const unique = values => [...new Set(values.filter(Boolean))].sort((a,b) => a.localeCompare(b));
-  const fill = (select, values) => values.forEach(value => {
-    const option = document.createElement('option');
-    option.value = value; option.textContent = value; select.append(option);
-  });
+  const unique = values => [...new Set(values.filter(v => v && v !== 'Unknown'))].sort((a,b) => a.localeCompare(b));
 
-  fill(airportFilter, unique(photos.map(p => p.airport)));
-  fill(airlineFilter, unique(photos.map(p => p.airline)));
-  data.photographers.forEach(person => {
-    const option = document.createElement('option'); option.value = person.id; option.textContent = person.name; photographerFilter.append(option);
-  });
+  function setOptions(select, values, placeholder) {
+    const current = select.value;
+    select.innerHTML = `<option value="">${placeholder}</option>`;
+    values.forEach(value => {
+      const option = document.createElement('option'); option.value = value; option.textContent = value; select.append(option);
+    });
+    if ([...select.options].some(o => o.value === current)) select.value = current;
+  }
 
-  if (params.get('airport')) airportFilter.value = params.get('airport');
-  if (params.get('photographer')) photographerFilter.value = params.get('photographer');
-
-  function card(photo) {
-    return `
-      <button class="photo-card" id="photo-${photo.id}" type="button" data-photo-id="${photo.id}" aria-label="Open ${photo.airline} ${photo.aircraft}">
-        <img src="${photo.src}" alt="${photo.alt}" loading="lazy">
-        <span class="photo-card__shade"></span>
-        <span class="photo-card__meta">
-          <span class="photo-card__eyebrow">${photo.airport} · ${photo.date}</span>
-          <strong>${photo.reg}</strong>
-          <span>${photo.airline} · ${photo.aircraft}</span>
-        </span>
-        <span class="photo-card__arrow">↗</span>
-      </button>`;
+  function syncFilters() {
+    setOptions(airportFilter, unique(photos.map(p => p.airport)), 'All airports');
+    setOptions(airlineFilter, unique(photos.map(p => p.airline)), 'All airlines');
+    const current = photographerFilter.value;
+    photographerFilter.innerHTML = '<option value="">All photographers</option>';
+    data.photographers.forEach(person => {
+      const option = document.createElement('option'); option.value = person.id; option.textContent = person.name; photographerFilter.append(option);
+    });
+    if ([...photographerFilter.options].some(o => o.value === current)) photographerFilter.value = current;
   }
 
   function filteredPhotos() {
@@ -57,41 +53,50 @@
     });
   }
 
+  function archiveNo(photo) {
+    const n = Math.max(1, photos.findIndex(p => String(p.id) === String(photo.id)) + 1);
+    return `SA / ${String(n).padStart(5, '0')}`;
+  }
+
+  function card(photo) {
+    return `<button class="photo-card" id="photo-${esc(photo.id)}" type="button" data-photo-id="${esc(photo.id)}" aria-label="Open ${esc(photo.airline)} ${esc(photo.aircraft)}">
+      <img src="${esc(photo.src)}" alt="${esc(photo.alt)}" loading="lazy" decoding="async" fetchpriority="low">
+      <span class="photo-card__shade"></span><span class="archive-stamp">${archiveNo(photo)}</span>
+      <span class="photo-card__meta"><span class="photo-card__eyebrow">${esc(photo.airport)} · ${esc(photo.date)}</span><strong>${esc(photo.reg)}</strong><span>${esc(photo.airline)} · ${esc(photo.aircraft)}</span></span>
+      <span class="photo-card__arrow">↗</span></button>`;
+  }
+
   function render() {
     const list = filteredPhotos();
     grid.innerHTML = list.map(card).join('');
-    count.textContent = `${list.length} photograph${list.length === 1 ? '' : 's'}`;
+    count.textContent = `${list.length} photograph${list.length === 1 ? '' : 's'} · ${photos.length} in archive`;
     grid.querySelectorAll('[data-photo-id]').forEach(el => el.addEventListener('click', () => openLightbox(el.dataset.photoId)));
   }
 
   function openLightbox(id) {
     activePhoto = photos.find(p => String(p.id) === String(id));
     if (!activePhoto || !modal || !modalInner) return;
-    modalInner.innerHTML = `
-      <div class="lightbox__media"><img src="${activePhoto.src}" alt="${activePhoto.alt}"></div>
-      <div class="lightbox__info">
-        <span class="eyebrow">${activePhoto.airline} · ${activePhoto.airport}</span>
-        <h2>${activePhoto.reg}</h2>
-        <p>${activePhoto.caption || 'A Scottish.aero photograph.'}</p>
-        <div class="detail-list">
-          <div class="detail-row"><span>Aircraft</span><b>${activePhoto.aircraft}</b></div>
-          <div class="detail-row"><span>Operator</span><b>${activePhoto.airline}</b></div>
-          <div class="detail-row"><span>Registration</span><b>${activePhoto.reg}</b></div>
-          <div class="detail-row"><span>Airport</span><b>${activePhoto.airport}</b></div>
-          <div class="detail-row"><span>Date</span><b>${activePhoto.date}</b></div>
-          <div class="detail-row"><span>Photographer</span><b>${activePhoto.photographerName || 'Unknown'}</b></div>
-        </div>
-      </div>`;
+    modalInner.innerHTML = `<div class="lightbox__media"><img src="${esc(activePhoto.src)}" alt="${esc(activePhoto.alt)}" decoding="async" fetchpriority="high"></div>
+      <div class="lightbox__info"><span class="eyebrow">${archiveNo(activePhoto)} · ${esc(activePhoto.airline)} · ${esc(activePhoto.airport)}</span>
+      <h2>${esc(activePhoto.reg)}</h2><p>${esc(activePhoto.caption || 'A Scottish.aero photograph.')}</p>
+      <div class="detail-list"><div class="detail-row"><span>Aircraft</span><b>${esc(activePhoto.aircraft)}</b></div><div class="detail-row"><span>Operator</span><b>${esc(activePhoto.airline)}</b></div><div class="detail-row"><span>Registration</span><b>${esc(activePhoto.reg)}</b></div><div class="detail-row"><span>Airport</span><b>${esc(activePhoto.airport)}</b></div><div class="detail-row"><span>Date</span><b>${esc(activePhoto.date)}</b></div><div class="detail-row"><span>Photographer</span><b>${esc(activePhoto.photographerName || 'Unknown')}</b></div></div></div>`;
     modal.showModal();
     document.body.classList.add('modal-open');
     backend.trackPhotoView(activePhoto.id);
   }
 
   function shift(delta) {
-    if (!activePhoto) return;
+    if (!activePhoto || !photos.length) return;
     const index = photos.findIndex(p => String(p.id) === String(activePhoto.id));
-    const next = (index + delta + photos.length) % photos.length;
-    openLightbox(photos[next].id);
+    openLightbox(photos[(index + delta + photos.length) % photos.length].id);
+  }
+
+  function applyData(nextData) {
+    data = nextData; photos = nextData.photos || [];
+    syncFilters();
+    if (params.get('airport')) airportFilter.value = params.get('airport');
+    if (params.get('photographer')) photographerFilter.value = params.get('photographer');
+    render();
   }
 
   [search, airportFilter, airlineFilter, photographerFilter].forEach(el => el.addEventListener('input', render));
@@ -108,9 +113,11 @@
     if (!modal?.open) return;
     if (e.key === 'ArrowLeft') shift(-1);
     if (e.key === 'ArrowRight') shift(1);
+    if (e.key === 'Escape') modal.close();
   });
 
-  render();
+  applyData(local);
+  if (backend.configured) backend.getData().then(applyData).catch(() => {});
   const hashId = location.hash.match(/^#photo-(.+)$/)?.[1];
-  if (hashId) setTimeout(() => openLightbox(hashId), 180);
+  if (hashId) setTimeout(() => openLightbox(hashId), 80);
 })();

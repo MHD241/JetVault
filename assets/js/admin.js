@@ -88,7 +88,7 @@
       const editable = canEdit(photo);
       return `
         <article class="admin-photo">
-          <img src="${photo.image_url}" alt="${photo.alt_text || photo.airline || 'Aircraft'}">
+          <img src="${photo.image_url}" alt="${photo.alt_text || photo.airline || 'Aircraft'}" loading="lazy" decoding="async">
           <div>
             <h3>${photo.registration || 'Unknown'} · ${photo.airline || 'Unknown'}</h3>
             <p>${photo.aircraft_type || 'Unknown'} · ${photo.airport || 'Unknown'} · ${photo.photographer_name}</p>
@@ -161,6 +161,38 @@
     img.src = url;
   });
 
+  async function optimiseUpload(file) {
+    // Resize and convert in the browser before Supabase sees the file.
+    // This keeps future gallery uploads fast without any database/schema changes.
+    const maxSide = 2200;
+    const quality = 0.82;
+    try {
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+      const width = Math.max(1, Math.round(bitmap.width * scale));
+      const height = Math.max(1, Math.round(bitmap.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d', { alpha: false });
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(bitmap, 0, 0, width, height);
+      bitmap.close?.();
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
+      if (!blob) throw new Error('WebP conversion unavailable');
+      return { blob, width, height, type: 'image/webp', ext: 'webp' };
+    } catch (error) {
+      console.warn('Scottish.aero: using original upload because browser optimisation failed.', error);
+      return {
+        blob: file,
+        width: 0,
+        height: 0,
+        type: file.type || 'image/jpeg',
+        ext: (file.name.split('.').pop() || 'jpg').replace(/[^a-z0-9]/gi, '').toLowerCase()
+      };
+    }
+  }
+
   uploadForm?.addEventListener('submit', async event => {
     event.preventDefault(); clearMessage(uploadError); clearMessage(uploadSuccess);
     if (!client || !sessionUser) return;
@@ -170,13 +202,18 @@
     if (file.size > 20 * 1024 * 1024) return showMessage(uploadError, 'Please keep individual images below 20 MB.');
 
     const form = new FormData(uploadForm);
-    const ext = (file.name.split('.').pop() || 'jpg').replace(/[^a-z0-9]/gi, '').toLowerCase();
-    const objectName = `${sessionUser.id}/${crypto.randomUUID()}.${ext}`;
     const submit = uploadForm.querySelector('button[type="submit"]');
-    submit.disabled = true; submit.textContent = 'Uploading…';
+    submit.disabled = true; submit.textContent = 'Optimising…';
 
     try {
-      const upload = await client.storage.from('photos').upload(objectName, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+      const optimised = await optimiseUpload(file);
+      const objectName = `${sessionUser.id}/${crypto.randomUUID()}.${optimised.ext}`;
+      submit.textContent = 'Uploading…';
+      const upload = await client.storage.from('photos').upload(objectName, optimised.blob, {
+        cacheControl: '31536000',
+        upsert: false,
+        contentType: optimised.type
+      });
       if (upload.error) throw upload.error;
       const { data: urlData } = client.storage.from('photos').getPublicUrl(objectName);
       const payload = {

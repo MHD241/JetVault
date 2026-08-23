@@ -35,7 +35,7 @@ window.SCOTTISH_AERO = {
   photos: [
     {
       id: '10000000-0000-4000-8000-000000000001',
-      src: 'assets/images/photos/arran-01-ryanair.jpg',
+      src: 'assets/images/photos/arran-01-ryanair.webp',
       alt: 'Ryanair Boeing 737 climbing away after departure',
       reg: 'Unknown',
       aircraft: 'Boeing 737-800',
@@ -49,7 +49,7 @@ window.SCOTTISH_AERO = {
     },
     {
       id: '10000000-0000-4000-8000-000000000002',
-      src: 'assets/images/photos/arran-02-jet2.jpg',
+      src: 'assets/images/photos/arran-02-jet2.webp',
       alt: 'Jet2 Boeing 737 taxiing beside a runway',
       reg: 'Unknown',
       aircraft: 'Boeing 737',
@@ -63,7 +63,7 @@ window.SCOTTISH_AERO = {
     },
     {
       id: '10000000-0000-4000-8000-000000000003',
-      src: 'assets/images/photos/arran-03-norwegian.jpg',
+      src: 'assets/images/photos/arran-03-norwegian.webp',
       alt: 'Norwegian Boeing 737 lifting away with trees behind',
       reg: 'Unknown',
       aircraft: 'Boeing 737-800',
@@ -77,7 +77,7 @@ window.SCOTTISH_AERO = {
     },
     {
       id: '10000000-0000-4000-8000-000000000004',
-      src: 'assets/images/photos/arran-04-icelandair.jpg',
+      src: 'assets/images/photos/arran-04-icelandair.webp',
       alt: 'Icelandair Boeing 737 MAX taxiing with hills behind',
       reg: 'Unknown',
       aircraft: 'Boeing 737 MAX',
@@ -91,7 +91,7 @@ window.SCOTTISH_AERO = {
     },
     {
       id: '10000000-0000-4000-8000-000000000005',
-      src: 'assets/images/photos/arran-05-american.jpg',
+      src: 'assets/images/photos/arran-05-american.webp',
       alt: 'American Airlines Boeing 787 Dreamliner in flight',
       reg: 'Unknown',
       aircraft: 'Boeing 787 Dreamliner',
@@ -105,7 +105,7 @@ window.SCOTTISH_AERO = {
     },
     {
       id: '10000000-0000-4000-8000-000000000006',
-      src: 'assets/images/photos/arran-06-qatar.jpg',
+      src: 'assets/images/photos/arran-06-qatar.webp',
       alt: 'Qatar Airways Boeing 787 Dreamliner on the runway',
       reg: 'Unknown',
       aircraft: 'Boeing 787 Dreamliner',
@@ -119,7 +119,7 @@ window.SCOTTISH_AERO = {
     },
     {
       id: '10000000-0000-4000-8000-000000000007',
-      src: 'assets/images/photos/arran-07-emirates-a380.jpg',
+      src: 'assets/images/photos/arran-07-emirates-a380.webp',
       alt: 'Emirates Airbus A380 in Journey to the Future special livery',
       reg: 'Unknown',
       aircraft: 'Airbus A380-800',
