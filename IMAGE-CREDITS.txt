@@ -1,0 +1,23 @@
+SCOTTISH.AERO — GAMES LAB IMAGE CREDITS
+
+Most game photography is from the Scottish.aero archive and is credited in the interface.
+
+Wingspan Battle external images:
+
+1. Boeing 747-8 — photograph by Kiefer.
+Source: https://commons.wikimedia.org/wiki/File:Lufthansa_Boeing_747-8_(16278574162).jpg
+License: CC BY-SA 2.0 — https://creativecommons.org/licenses/by-sa/2.0/
+Local file: assets/images/games/wingspan-747-8.webp
+Change: resized/compressed and converted to WebP. This derivative remains CC BY-SA 2.0.
+
+2. Boeing 777-300ER — photograph by Dallahi
+Source: https://commons.wikimedia.org/wiki/File:Emirates_Boeing_777-300.jpg
+License: CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/
+Local file: assets/images/games/wingspan-777-300er.webp
+Change: resized/compressed and converted to WebP.
+
+3. Airbus A350-1000 — photograph by Clemens Vasters
+Source: https://commons.wikimedia.org/wiki/File:Airbus_A350-1000_(34598951684).jpg
+License: CC BY 2.0 — https://creativecommons.org/licenses/by/2.0/
+Local file: assets/images/games/wingspan-a350-1000.webp
+Change: resized/compressed and converted to WebP.
