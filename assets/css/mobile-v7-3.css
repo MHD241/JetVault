@@ -1,0 +1,389 @@
+/* Scottish.aero V7.3 — mobile-first repair layer
+   Loaded after styles-v7-2.css. Desktop is intentionally left alone. */
+
+/* Decorative layers must never steal taps. */
+.v7-sky,
+.hero-orbit,
+.hero-hud,
+.discover-world,
+.creator-index-hero__radar,
+.games-radar,
+.account-orbit,
+.home-world-radar,
+.airspace-line,
+.cursor-glow,
+.page-transition,
+.development-ribbon{
+  pointer-events:none!important;
+}
+
+button,a,input,select,textarea,summary,[role="button"]{
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:rgba(127,210,255,.12);
+}
+
+/* Keep the archive number and crew/community origin in different corners. */
+.photo-card .archive-stamp{
+  top:14px!important;
+  left:14px!important;
+  right:auto!important;
+  max-width:46%;
+  white-space:nowrap;
+}
+.photo-card .gallery-origin-badge{
+  top:14px!important;
+  right:14px!important;
+  left:auto!important;
+  max-width:48%;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  transform:none!important;
+}
+.photo-card:hover .gallery-origin-badge{transform:none!important}
+
+/* Keep real controls above image shades/decorations. */
+.photo-card__open,.photo-card__social,.home-shot a,.game-answer,.follow-button,
+.community-chip-wrap,.community-menu,.sa-help__toggle,.sa-bug__toggle{
+  position:relative;
+  pointer-events:auto!important;
+}
+.photo-card__social{z-index:12!important}
+
+@media (max-width:1050px){
+  /* ---------- Header: logo · account · menu ---------- */
+  .site-header{
+    z-index:600!important;
+    background:rgba(6,9,13,.92);
+    border-bottom:1px solid rgba(255,255,255,.08);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+  }
+  .header-inner{
+    min-height:68px!important;
+    width:min(calc(100% - 24px),var(--max))!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:9px!important;
+  }
+  .header-inner>.brand{
+    min-width:0;
+    flex:1 1 auto;
+    font-size:1rem;
+    z-index:2;
+  }
+  .header-inner>.brand>span:last-child{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .header-action{
+    display:flex!important;
+    flex:0 0 auto;
+    align-items:center;
+    gap:6px!important;
+    order:2;
+    z-index:3;
+  }
+  .header-action>.pill-button{display:none!important}
+  .community-chip-wrap{display:flex!important}
+  .community-chip{height:42px!important;min-width:42px}
+  .community-chip b{display:none!important}
+  .community-chip__avatar{width:30px!important;height:30px!important}
+
+  .nav-toggle{
+    order:3;
+    flex:0 0 42px;
+    width:42px!important;
+    height:42px!important;
+    display:grid!important;
+    place-items:center;
+    position:relative!important;
+    inset:auto!important;
+    margin:0!important;
+    z-index:702!important;
+    background:rgba(255,255,255,.045)!important;
+    backdrop-filter:none!important;
+  }
+
+  /* ---------- Real mobile drawer ---------- */
+  .site-nav{
+    display:flex!important;
+    position:fixed!important;
+    z-index:690!important;
+    inset:68px 0 0!important;
+    width:auto!important;
+    height:auto!important;
+    padding:clamp(22px,6vw,42px) 20px calc(28px + env(safe-area-inset-bottom))!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    justify-content:flex-start!important;
+    gap:0!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain;
+    background:
+      radial-gradient(circle at 88% 8%,rgba(120,185,255,.11),transparent 25%),
+      linear-gradient(180deg,#070c12 0%,#05080c 100%)!important;
+    border-top:1px solid rgba(255,255,255,.07);
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transform:translate3d(0,-12px,0);
+    transition:opacity .22s ease,transform .28s cubic-bezier(.16,1,.3,1),visibility .22s;
+    counter-reset:sa-mobile-nav;
+  }
+  .site-nav::after{
+    content:"SCOTTISH.AERO  /  MOBILE NAVIGATION";
+    display:block;
+    margin-top:auto;
+    padding:32px 2px 4px;
+    color:rgba(255,255,255,.27);
+    font-size:.57rem;
+    letter-spacing:.15em;
+  }
+  body.nav-open .site-nav{
+    opacity:1!important;
+    visibility:visible!important;
+    pointer-events:auto!important;
+    transform:none!important;
+  }
+  .site-nav a{
+    counter-increment:sa-mobile-nav;
+    width:100%!important;
+    min-height:68px;
+    padding:15px 2px!important;
+    display:flex!important;
+    align-items:center;
+    gap:15px;
+    border-bottom:1px solid rgba(255,255,255,.1)!important;
+    color:#f4f7fb!important;
+    font-size:clamp(1.55rem,6vw,2.1rem)!important;
+    font-weight:680;
+    letter-spacing:-.045em;
+    line-height:1!important;
+  }
+  .site-nav a::before{
+    content:counter(sa-mobile-nav,decimal-leading-zero);
+    width:30px;
+    flex:0 0 30px;
+    color:var(--accent2);
+    font-size:.58rem;
+    font-weight:800;
+    letter-spacing:.12em;
+  }
+  .site-nav a::after{display:none!important}
+  .site-nav a[aria-current="page"]{color:var(--accent2)!important}
+
+  body.nav-open .development-ribbon{opacity:0!important}
+
+  /* Account dropdown should not be wider than the phone. */
+  .community-menu{
+    position:fixed!important;
+    z-index:720!important;
+    top:74px!important;
+    right:10px!important;
+    left:10px!important;
+    width:auto!important;
+    max-height:calc(100dvh - 86px)!important;
+    overflow:auto!important;
+  }
+
+  /* ---------- Beta indicator ---------- */
+  .development-ribbon{
+    z-index:72!important;
+    top:76px!important;
+    right:10px!important;
+    left:auto!important;
+    width:auto!important;
+    min-height:0!important;
+    padding:6px 9px!important;
+    display:flex!important;
+    align-items:center;
+    gap:6px;
+    border-radius:999px!important;
+    transform:none!important;
+    opacity:.82;
+    transition:opacity .2s ease!important;
+  }
+  .development-ribbon span,.development-ribbon b{
+    display:inline!important;
+    margin:0!important;
+    line-height:1!important;
+  }
+  .development-ribbon span{font-size:.48rem!important}
+  .development-ribbon b{font-size:.42rem!important}
+
+  /* ---------- Hero ---------- */
+  .hero-content{
+    padding-top:112px!important;
+    padding-bottom:72px!important;
+  }
+  .hero--v4 h1{
+    font-size:clamp(4.45rem,18vw,7.4rem)!important;
+    line-height:.72!important;
+    margin:18px 0 24px!important;
+  }
+  .hero-copy>p{font-size:1rem!important;line-height:1.5}
+  .hero-aside{width:100%!important}
+  .hero-aside-card{min-width:0}
+  .hero-hud{display:none!important}
+
+  /* ---------- Utilities become compact mobile controls ---------- */
+  .sa-help{right:10px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;z-index:760!important}
+  .sa-bug{left:10px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;z-index:760!important}
+  .sa-help__toggle,.sa-bug__toggle{
+    width:46px!important;
+    min-width:46px!important;
+    height:46px!important;
+    min-height:46px!important;
+    padding:0!important;
+    display:grid!important;
+    place-items:center!important;
+    border-radius:50%!important;
+  }
+  .sa-help__toggle{font-size:0!important}
+  .sa-help__toggle span{font-size:.78rem!important;margin:0!important}
+  .sa-bug__toggle b{display:none!important}
+  .sa-bug__toggle span{margin:0!important}
+  .sa-help__panel,.sa-bug__panel{
+    position:fixed!important;
+    z-index:770!important;
+    left:10px!important;
+    right:10px!important;
+    bottom:calc(64px + env(safe-area-inset-bottom))!important;
+    top:auto!important;
+    width:auto!important;
+    max-height:min(72dvh,680px)!important;
+    overflow:auto!important;
+    border-radius:22px!important;
+  }
+
+  /* ---------- Touchability ---------- */
+  .page-main{position:relative;z-index:1}
+  .solid-button,.outline-button,.ghost-button,.mini-button,.clear-button,
+  .game-answer,.follow-button,.social-action,.photo-card__quick-like,
+  .account-tabs button,.studio-tabs button{
+    min-height:44px;
+  }
+  .photo-card__open{z-index:1}
+  .photo-card__social{z-index:20!important;opacity:1!important;transform:none!important}
+
+  /* ---------- Lightbox acts like a mobile photo page ---------- */
+  .lightbox{
+    width:100vw!important;
+    max-width:none!important;
+    height:100dvh!important;
+    max-height:100dvh!important;
+    margin:0!important;
+    border-radius:0!important;
+  }
+  .lightbox__inner{min-height:100%;overflow:auto!important}
+  .lightbox__chrome{position:fixed!important;z-index:40!important}
+
+  /* ---------- Games: use the whole phone, not a desktop window ---------- */
+  .game-shell{
+    inset:0!important;
+    width:100%!important;
+    height:var(--sa-mobile-vh,100dvh)!important;
+    max-width:none!important;
+    max-height:var(--sa-mobile-vh,100dvh)!important;
+    border:0!important;
+    border-radius:0!important;
+  }
+  .game-shell__header{
+    padding:calc(10px + env(safe-area-inset-top)) 12px 10px!important;
+    min-height:64px;
+  }
+  .game-shell__header h2{font-size:1rem!important}
+  .game-shell__mode{font-size:.48rem!important}
+  .game-close{flex:0 0 40px}
+  .game-stage{
+    justify-content:flex-start!important;
+    padding:18px 13px calc(26px + env(safe-area-inset-bottom))!important;
+    -webkit-overflow-scrolling:touch;
+  }
+  .game-question-head{margin-bottom:12px!important}
+  .game-visual{min-height:190px!important;border-radius:18px!important}
+  .game-answer{position:relative;z-index:4;min-height:58px!important}
+
+  /* Route Guessr: compact route + clues instead of a 560px desktop block. */
+  .game-stage--routes .game-visual{
+    min-height:0!important;
+    height:auto!important;
+    padding:12px!important;
+    overflow:visible!important;
+  }
+  .game-stage--routes .route-guess-visual{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;
+    gap:8px!important;
+    width:100%!important;
+    margin:0 auto!important;
+  }
+  .game-stage--routes .route-guess-visual>div{padding:12px 8px!important}
+  .game-stage--routes .route-guess-visual b{font-size:clamp(2.2rem,12vw,3.25rem)!important}
+  .game-stage--routes .route-guess-visual>.route-guess-line{
+    transform:none!important;
+    margin:0!important;
+    gap:3px!important;
+  }
+  .game-stage--routes .route-guess-line i{width:15px!important}
+  .game-stage--routes .route-guess-visual>dl{
+    grid-column:1/-1!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:5px!important;
+  }
+  .game-stage--routes .route-guess-visual>dl>div{padding:7px 4px!important}
+  .game-stage--routes .route-guess-visual dt{font-size:.43rem!important}
+  .game-stage--routes .route-guess-visual dd{font-size:.64rem!important}
+
+  /* ---------- Gallery toolbar: no tiny squashed fields ---------- */
+  .gallery-toolbar{top:68px!important}
+  .toolbar-grid{
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+    padding:10px 0!important;
+  }
+  .toolbar-grid>[data-gallery-search],
+  .toolbar-grid>[data-photographer-search]{grid-column:1/-1!important}
+  .toolbar-grid .control,.toolbar-grid .clear-button{min-height:44px}
+
+  /* Account/editor content must use the available phone width. */
+  .community-account-page .account-dashboard>.site-shell,
+  .community-account-page .account-panel{
+    width:100%!important;
+    max-width:none!important;
+  }
+  .community-account-page .profile-editor-grid{grid-template-columns:1fr!important}
+}
+
+@media (max-width:520px){
+  .header-inner{width:calc(100% - 18px)!important;gap:7px!important}
+  .brand-mark{width:29px!important;height:29px!important}
+  .header-inner>.brand{font-size:.94rem}
+  .community-chip{padding:0 6px!important}
+
+  .development-ribbon{
+    top:73px!important;
+    right:8px!important;
+    padding:5px 7px!important;
+  }
+  .development-ribbon b{display:none!important}
+
+  .site-nav{padding-inline:16px!important}
+  .site-nav a{font-size:1.7rem!important}
+
+  .hero--v4 h1{font-size:clamp(4.1rem,19vw,6.5rem)!important}
+  .hero-copy__actions{gap:12px!important}
+
+  .toolbar-grid{grid-template-columns:1fr!important}
+  .toolbar-grid>*{grid-column:1!important;width:100%!important}
+
+  .game-shell__hud span{padding:6px!important}
+  .game-stage{padding-inline:10px!important}
+  .game-stage--routes .route-guess-visual b{font-size:2.35rem!important}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .site-nav{transition:none!important}
+}
