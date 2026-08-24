@@ -1,9 +1,15 @@
 (() => {
-  if (window.__SCOTTISH_AERO_AUTH_HOTFIX_V731__) return;
-  window.__SCOTTISH_AERO_AUTH_HOTFIX_V731__ = true;
+  if (window.__SCOTTISH_AERO_AUTH_HOTFIX_V732__) return;
+  window.__SCOTTISH_AERO_AUTH_HOTFIX_V732__ = true;
 
   const backend = window.ScottishAeroBackend;
   if (!backend?.configured) return;
+
+  const accountEmails = {
+    mohammed: 'mohammed@scottish.aero',
+    ellis: 'ellis@scottish.aero',
+    arran: 'arran@scottish.aero'
+  };
 
   const setMessage = (node, text, ok = false) => {
     if (!node) return;
@@ -13,13 +19,20 @@
     node.classList.toggle('form-error', Boolean(text) && !ok);
   };
 
+  const currentCrewKey = () => {
+    const shown = String(document.querySelector('[data-profile-name]')?.textContent || '')
+      .trim().toLowerCase();
+    if (shown.startsWith('mohammed')) return 'mohammed';
+    if (shown.startsWith('ellis')) return 'ellis';
+    if (shown.startsWith('arran')) return 'arran';
+    return '';
+  };
+
   async function install() {
     const db = await backend.ensureClient().catch(() => null);
     if (!db?.auth) return;
 
-    // V7.3.1: a normal website sign-out should only sign out this browser/device.
-    // This stops one crew member logging out on one device from invalidating another
-    // device that is currently editing a profile or changing its password.
+    // A normal sign-out should only clear this browser/device.
     if (!db.auth.__saLocalLogoutPatched) {
       const originalSignOut = db.auth.signOut.bind(db.auth);
       db.auth.signOut = (options) => {
@@ -35,72 +48,112 @@
       });
     }
 
-    // Creator Studio password form: validate/refresh the session before updateUser.
-    // We attach in capture phase so this safely replaces the older submit handler
-    // without needing to rewrite the whole Creator Studio script.
     const form = document.querySelector('[data-password-form]');
-    if (!form || form.dataset.authHotfixV731 === '1') return;
-    form.dataset.authHotfixV731 = '1';
+    if (!form || form.dataset.authHotfixV732 === '1') return;
+    form.dataset.authHotfixV732 = '1';
+
+    // Rebuild only the security form. The rest of Creator Studio stays untouched.
+    form.innerHTML = `
+      <div class="field">
+        <label>Current password</label>
+        <input class="control" type="password" name="current_password"
+          autocomplete="current-password" placeholder="Your current password" required>
+      </div>
+      <div class="field">
+        <label>New password</label>
+        <input class="control" type="password" name="new_password"
+          autocomplete="new-password" placeholder="10+ characters" required>
+      </div>
+      <div class="field">
+        <label>Confirm new password</label>
+        <input class="control" type="password" name="confirm_password"
+          autocomplete="new-password" placeholder="Type it again" required>
+      </div>
+      <div class="form-error" data-password-message></div>
+      <button class="outline-button" type="submit">Change password</button>
+    `;
 
     form.addEventListener('submit', async event => {
+      // This capture listener replaces the older admin.js password handler.
       event.preventDefault();
       event.stopImmediatePropagation();
 
-      const message = document.querySelector('[data-password-message]');
+      const fd = new FormData(form);
+      const currentPassword = String(fd.get('current_password') || '');
+      const newPassword = String(fd.get('new_password') || '');
+      const confirmPassword = String(fd.get('confirm_password') || '');
+      const message = form.querySelector('[data-password-message]');
       const button = form.querySelector('button[type="submit"]');
-      const password = String(new FormData(form).get('new_password') || '');
 
       setMessage(message, '');
-      if (password.length < 10) {
-        setMessage(message, 'Use at least 10 characters.');
+
+      if (!currentPassword) {
+        setMessage(message, 'Enter your current password first.');
+        return;
+      }
+      if (newPassword.length < 10) {
+        setMessage(message, 'Use at least 10 characters for the new password.');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setMessage(message, 'The two new passwords do not match.');
+        return;
+      }
+      if (newPassword === currentPassword) {
+        setMessage(message, 'Choose a new password that is different from the current one.');
         return;
       }
 
       if (button) {
         button.disabled = true;
-        button.textContent = 'Checking session…';
+        button.textContent = 'Verifying current password…';
       }
 
       try {
-        let { data: sessionData, error: sessionError } = await db.auth.getSession();
-        if (sessionError) throw sessionError;
-        let session = sessionData?.session || null;
+        // A revoked/stale browser session can still contain the user email locally.
+        // If it does not, fall back to the known crew account mapping.
+        const sessionResult = await db.auth.getSession();
+        const cachedEmail = sessionResult?.data?.session?.user?.email || '';
+        const crewKey = currentCrewKey();
+        const email = cachedEmail || accountEmails[crewKey] || '';
 
-        if (!session) {
-          setMessage(message, 'Your session on this device has ended. Sign in again, then change the password.');
+        if (!email) {
+          setMessage(message, 'Could not identify this crew account. Sign in again and retry.');
           return;
         }
 
-        // Refresh if the token is close to expiry. This avoids a race where a valid
-        // looking cached session expires between opening Account and pressing Save.
-        const now = Math.floor(Date.now() / 1000);
-        if (!session.expires_at || session.expires_at - now < 90) {
-          if (button) button.textContent = 'Refreshing session…';
-          const refreshed = await db.auth.refreshSession();
-          if (refreshed.error || !refreshed.data?.session) {
-            setMessage(message, 'Your session expired. Sign in again, then change the password.');
-            return;
-          }
-          session = refreshed.data.session;
+        // IMPORTANT: do not trust the cached session. Re-authenticate with the
+        // current password to create a fresh server-valid session first.
+        const signIn = await db.auth.signInWithPassword({
+          email,
+          password: currentPassword
+        });
+
+        if (signIn.error || !signIn.data?.session) {
+          const invalid = signIn.error?.code === 'invalid_credentials' ||
+            /invalid login credentials/i.test(signIn.error?.message || '');
+          setMessage(
+            message,
+            invalid
+              ? 'Current password is incorrect.'
+              : (signIn.error?.message || 'Could not verify the current password.')
+          );
+          return;
         }
 
         if (button) button.textContent = 'Changing password…';
-        const { error } = await db.auth.updateUser({ password });
-        if (error) {
-          const expired = error.code === 'session_not_found' || /session (?:not found|missing|expired)/i.test(error.message || '');
-          setMessage(message, expired
-            ? 'Your session expired before the password could be changed. Sign in again and try once more.'
-            : (error.message || 'Password change failed.'));
+
+        const updated = await db.auth.updateUser({ password: newPassword });
+        if (updated.error) {
+          setMessage(message, updated.error.message || 'Password change failed.');
           return;
         }
 
         form.reset();
-        setMessage(message, 'Password changed successfully.', true);
+        setMessage(message, 'Password changed successfully. This device stays signed in.', true);
+        window.dispatchEvent(new CustomEvent('sa:auth-changed'));
       } catch (error) {
-        const expired = error?.code === 'session_not_found' || /session (?:not found|missing|expired)/i.test(error?.message || '');
-        setMessage(message, expired
-          ? 'Your session expired. Sign in again, then change the password.'
-          : (error?.message || 'Password change failed.'));
+        setMessage(message, error?.message || 'Password change failed.');
       } finally {
         if (button) {
           button.disabled = false;
