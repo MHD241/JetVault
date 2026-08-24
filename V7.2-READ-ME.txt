@@ -1,0 +1,32 @@
+SCOTTISH.AERO — V7.2 BUG FIX + BETA POLISH
+
+YOUR JOB
+1. Unzip this folder.
+2. Upload EVERYTHING INSIDE the folder to the ROOT of the existing Scottish.aero GitHub repository.
+3. Let GitHub replace matching files and add the new V7.2 files.
+4. Commit changes.
+5. Wait for GitHub Pages deployment to turn green, then refresh the site.
+
+NO SUPABASE WORK IS REQUIRED.
+The V7.2 bug-report database table and security rules have already been added to the existing project.
+
+IMPORTANT
+- config.js is intentionally NOT included, so your existing Supabase credentials are not overwritten.
+- Old V7/V7.1 asset files can remain in the repo. V7.2 HTML now points at the new V7.2 files.
+
+V7.2 CHANGES
+- Community Account profile panel now uses the full desktop width instead of being capped at 620px.
+- Gallery CREW/GLOBAL badges no longer collide with SA archive serial numbers.
+- Gallery photographer selector replaced by a live photographer search box.
+- Added a global UNDER DEVELOPMENT · V7.2 PUBLIC BETA ribbon.
+- Added a public Report a bug box on every public page.
+- Bug reports automatically attach the current page and browser/device information.
+- Mohammed's Moderation tab now gains a Website bug reports queue with Open / In progress / Resolved / Closed states.
+- Existing Help & rate and future-social placeholders remain.
+
+FIRST TESTS
+- Community > Profile: the profile editor/rules area should fill the page width.
+- Gallery: type “Mohammed”, “Arran” or a username into Search photographer.
+- Gallery: SA / 00001 and CREW should be visibly separate.
+- Any public page: look for UNDER DEVELOPMENT ribbon and Report a bug button.
+- Creator Studio > Moderation: submit a test bug and confirm it appears in Website bug reports.
