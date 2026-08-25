@@ -1,0 +1,93 @@
+/* Scottish.aero V8.0.2 — Discover Safari rendering hotfix */
+/* Discover is dynamically populated. Safari can reserve the site's 900px
+   content-visibility placeholder and fail to repaint injected children. */
+.discover-page .section,
+.discover-page .site-footer,
+.discover-page [data-following-section],
+.discover-page [data-trending-grid],
+.discover-page [data-crew-strip],
+.discover-page [data-latest-grid],
+.discover-page [data-community-creators],
+.discover-page [data-discover-all],
+.discover-page .discover-feature-grid,
+.discover-page .discover-row,
+.discover-page .crew-global-strip,
+.discover-page .community-creator-grid,
+.discover-page .discover-all-grid,
+.discover-page .discover-photo,
+.discover-page .community-creator,
+.discover-page .photo-card--discover {
+  content-visibility: visible !important;
+  contain: none !important;
+  contain-intrinsic-size: none !important;
+}
+
+/* Dynamic Discover cards must never rely on the generic reveal observer. */
+.discover-page main [data-reveal],
+.discover-page .discover-photo,
+.discover-page .community-creator,
+.discover-page .photo-card--discover {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+}
+
+/* Explicit media geometry prevents Safari collapsing async image wrappers. */
+.discover-page .discover-photo {
+  display: block !important;
+  position: relative !important;
+}
+.discover-page .discover-photo__image {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+.discover-page .discover-photo__image img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.discover-page .discover-feature-grid { min-height: 650px !important; }
+.discover-page .discover-feature-grid .discover-photo { min-height: 300px !important; }
+.discover-page .discover-feature-grid .discover-photo--large { min-height: 650px !important; }
+.discover-page .discover-row:not(.discover-row--latest) .discover-photo,
+.discover-page .discover-row--latest .discover-photo { min-height: 390px !important; }
+
+.discover-page .crew-global-strip[data-crew-strip] .community-creator,
+.discover-page .community-creator-grid .community-creator {
+  display: flex !important;
+  min-height: 300px !important;
+}
+
+.discover-page .photo-card--discover {
+  display: block !important;
+  min-height: 285px !important;
+}
+.discover-page .photo-card--discover .photo-card__image {
+  position: relative !important;
+  width: 100% !important;
+  aspect-ratio: 4 / 3 !important;
+  min-height: 190px !important;
+  overflow: hidden !important;
+}
+.discover-page .photo-card--discover .photo-card__image img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+@media(max-width:760px){
+  .discover-page .discover-feature-grid{min-height:0 !important}
+  .discover-page .discover-feature-grid .discover-photo,
+  .discover-page .discover-feature-grid .discover-photo--large,
+  .discover-page .discover-row:not(.discover-row--latest) .discover-photo,
+  .discover-page .discover-row--latest .discover-photo{min-height:340px !important}
+  .discover-page .photo-card--discover{min-height:0 !important}
+}
