@@ -1,0 +1,85 @@
+
+/* Scottish.aero V8.0 — Spotter XP */
+
+.hero-missions-link{color:var(--accent2)!important}
+.hero-build-cta{
+  margin-top:18px;max-width:590px;padding:13px 16px;border:1px solid rgba(181,150,255,.17);border-radius:15px;
+  background:linear-gradient(115deg,rgba(158,123,255,.075),rgba(120,185,255,.035));display:grid;grid-template-columns:auto 1fr;gap:15px;align-items:center
+}
+.hero-build-cta>span{font-size:.48rem;letter-spacing:.14em;color:rgba(255,255,255,.42)}
+.hero-build-cta a{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.hero-build-cta b{font-size:.78rem}.hero-build-cta em{font-style:normal;color:var(--accent2);font-size:.67rem}
+.hero-aside-card--build{display:block!important;background:linear-gradient(135deg,rgba(158,123,255,.08),rgba(120,185,255,.05))!important;border-color:rgba(166,142,255,.22)!important}
+.hero-aside-card--build strong{font-size:1.18rem!important}
+.hero-aside-card--build em{display:block;margin-top:7px;color:var(--accent2);font-size:.61rem;font-style:normal}
+
+.v8-home{position:relative;overflow:hidden;background:radial-gradient(circle at 85% 20%,rgba(120,185,255,.075),transparent 27%),#06090d;border-bottom:1px solid rgba(255,255,255,.05)}
+.v8-home:before{content:"V8";position:absolute;right:-.04em;top:-.18em;font-size:min(34vw,500px);font-weight:900;line-height:1;color:rgba(255,255,255,.018);letter-spacing:-.1em;pointer-events:none}
+.v8-home__head{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.45fr);gap:50px;align-items:end;margin-bottom:35px}
+.v8-home__head h2{margin:11px 0 0;font-size:clamp(3.3rem,7vw,7.2rem);line-height:.83;letter-spacing:-.075em}.v8-home__head h2 span{color:rgba(244,247,251,.3)}
+.v8-home__status{justify-self:end;max-width:460px}.v8-home__status>span{font-size:.58rem;letter-spacing:.14em;color:var(--success)}.v8-home__status>span i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--success);margin-right:7px;box-shadow:0 0 12px rgba(103,214,161,.6)}.v8-home__status p{color:var(--muted);font-size:.75rem;line-height:1.65}
+.v8-home__missions{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.v8-mission-card,.mission-card{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.027),rgba(255,255,255,.01));transition:.3s var(--ease)}
+.v8-mission-card{min-height:225px;padding:23px}.v8-mission-card:hover,.mission-card:hover{transform:translateY(-5px);border-color:rgba(120,185,255,.23)}
+.v8-mission-card:after,.mission-card:after{content:"";position:absolute;right:-50px;bottom:-70px;width:150px;height:150px;border:1px solid rgba(120,185,255,.08);border-radius:50%}
+.v8-mission-card__top,.mission-card__top{display:flex;justify-content:space-between;gap:12px}.v8-mission-card__top span,.mission-card__top span{font-size:.53rem;letter-spacing:.13em;color:var(--accent2);font-weight:800}.v8-mission-card__top em,.mission-card__top em{font-style:normal;color:var(--success);font-size:.55rem;font-weight:800}
+.v8-mission-card h3{margin:47px 0 9px;font-size:1.65rem;letter-spacing:-.045em}.v8-mission-card p{margin:0;color:var(--muted);font-size:.68rem;line-height:1.6}
+.v8-mission-card.is-medium,.mission-card.is-medium{background:linear-gradient(145deg,rgba(120,185,255,.055),rgba(255,255,255,.012))}
+.v8-mission-card.is-hard,.mission-card.is-hard{background:linear-gradient(145deg,rgba(170,137,255,.065),rgba(255,255,255,.012))}
+.v8-mission-card.is-complete,.mission-card.is-complete{border-color:rgba(103,214,161,.27);background:linear-gradient(145deg,rgba(103,214,161,.07),rgba(255,255,255,.01))}
+.v8-home__foot{position:relative;margin-top:13px;padding:12px 4px;display:flex;justify-content:space-between;gap:15px;color:var(--muted);font-size:.65rem}.v8-home__foot b{color:#fff}.v8-home__foot a{color:var(--accent2)}
+
+.missions-hero{min-height:88svh;padding:145px 0 78px;position:relative;overflow:hidden;display:flex;align-items:flex-end;background:radial-gradient(circle at 80% 34%,rgba(120,185,255,.14),transparent 22%),radial-gradient(circle at 8% 80%,rgba(160,125,255,.07),transparent 25%),#06090d}
+.missions-hero:before{content:"";position:absolute;inset:0;opacity:.16;background-image:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);background-size:88px 88px;mask-image:linear-gradient(#000,transparent 88%);pointer-events:none}
+.missions-radar{position:absolute;right:-5vw;top:12%;width:min(46vw,640px);aspect-ratio:1;border:1px solid rgba(120,185,255,.13);border-radius:50%;pointer-events:none}
+.missions-radar:before,.missions-radar:after{content:"";position:absolute;border:1px dashed rgba(120,185,255,.09);border-radius:50%;inset:18%}.missions-radar:after{inset:39%}.missions-radar>b{position:absolute;left:50%;top:50%;width:46%;height:1px;background:linear-gradient(90deg,var(--accent),transparent);transform-origin:left;animation:v8Radar 7s linear infinite}@keyframes v8Radar{to{transform:rotate(360deg)}}
+.missions-hero__grid{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(340px,.48fr);gap:70px;align-items:end}.missions-hero h1{margin:12px 0 21px;font-size:clamp(4.8rem,10vw,10.5rem);line-height:.78;letter-spacing:-.085em}.missions-hero h1 span{color:rgba(244,247,251,.27)}.missions-hero__copy>p{max-width:760px;color:rgba(244,247,251,.69);font-size:clamp(1rem,1.4vw,1.18rem);line-height:1.65}.missions-hero__actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:27px}
+.mission-profile-card{padding:25px;border:1px solid rgba(120,185,255,.2);border-radius:22px;background:rgba(7,13,20,.72);backdrop-filter:blur(14px);box-shadow:0 30px 80px rgba(0,0,0,.3)}.mission-profile-card>span{color:var(--accent2);font-size:.56rem;letter-spacing:.14em}.mission-profile-card h2{margin:10px 0 8px;font-size:2rem;letter-spacing:-.05em}.mission-profile-card p{color:var(--muted);font-size:.7rem}.mission-level-row{display:flex;gap:9px;align-items:center;margin:12px 0}.mission-level-row b{font-size:1.1rem;color:var(--accent2)}.mission-level-row em{font-style:normal;font-size:.58rem;letter-spacing:.08em;color:var(--muted)}.mission-profile-card__stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:14px 0}.mission-profile-card__stats span{padding:9px;border:1px solid var(--line);border-radius:10px;font-size:.55rem}.mission-profile-card>small{display:block;color:var(--muted);font-size:.58rem;margin-bottom:14px}
+.mission-xp-track{height:7px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}.mission-xp-track i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),#b8a0ff);box-shadow:0 0 18px rgba(120,185,255,.35);transition:width .7s var(--ease)}
+.missions-today{scroll-margin-top:80px}.mission-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}.mission-card{min-height:310px;padding:26px}.mission-card h3{margin:78px 0 10px;font-size:clamp(1.7rem,2.5vw,2.55rem);letter-spacing:-.055em}.mission-card>p{max-width:400px;color:var(--muted);font-size:.73rem;line-height:1.65}.mission-card__foot{position:absolute;z-index:2;left:26px;right:26px;bottom:22px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center}.mission-card__foot span{font-size:.48rem;letter-spacing:.09em;color:var(--muted)}.mission-card__foot a{font-size:.61rem;color:var(--accent2)}
+.daily-clear{margin-top:12px;padding:18px 20px;border:1px solid var(--line);border-radius:15px;display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;background:rgba(255,255,255,.015)}.daily-clear span{font-size:.55rem;letter-spacing:.13em;color:var(--accent2)}.daily-clear b{font-size:.76rem}.daily-clear em{font-style:normal;color:var(--success);font-size:.58rem}.daily-clear.is-complete{border-color:rgba(103,214,161,.26);background:rgba(103,214,161,.035)}
+.missions-how{display:grid;grid-template-columns:minmax(0,.7fr) minmax(420px,1fr);gap:70px}.missions-how h2{margin:12px 0 0;font-size:clamp(3.5rem,6.8vw,7rem);line-height:.83;letter-spacing:-.075em}.missions-how h2 span{color:rgba(244,247,251,.27)}.missions-how__steps{display:grid;gap:8px}.missions-how__steps article{padding:17px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.015);display:grid;grid-template-columns:34px 1fr;gap:12px}.missions-how__steps article>b{color:rgba(120,185,255,.55);font-size:.58rem}.missions-how__steps strong{display:block;font-size:.75rem}.missions-how__steps small{display:block;margin-top:3px;color:var(--muted);font-size:.61rem}
+.level-roadmap{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}.level-roadmap article{min-height:180px;padding:17px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.013);opacity:.55}.level-roadmap article.is-unlocked{opacity:1;border-color:rgba(120,185,255,.19);background:rgba(120,185,255,.035)}.level-roadmap span{font-size:.52rem;letter-spacing:.11em;color:var(--accent2)}.level-roadmap b{display:block;margin-top:32px;font-size:.85rem}.level-roadmap p{color:var(--muted);font-size:.57rem;line-height:1.5}.level-roadmap em{display:block;margin-top:12px;font-style:normal;font-size:.48rem;color:var(--success)}
+.achievement-catalog{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.achievement-catalog article{min-height:180px;padding:20px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.015)}.achievement-catalog span{color:rgba(120,185,255,.48);font-size:.6rem}.achievement-catalog b{display:block;margin-top:42px;font-size:.82rem}.achievement-catalog p{margin:6px 0;color:var(--muted);font-size:.62rem}
+.xp-ledger{display:grid;gap:6px}.xp-ledger article{padding:15px 17px;border:1px solid var(--line);border-radius:13px;display:grid;grid-template-columns:100px 1fr auto;gap:16px;align-items:center;background:rgba(255,255,255,.014)}.xp-ledger article span{color:var(--success);font-size:.62rem;font-weight:800}.xp-ledger article b{font-size:.7rem}.xp-ledger article time{color:var(--muted);font-size:.56rem}.xp-ledger-empty,.v8-empty{padding:22px;border:1px dashed rgba(255,255,255,.12);border-radius:14px;color:var(--muted);font-size:.68rem;display:flex;justify-content:space-between;gap:15px}.xp-ledger-empty a{color:var(--accent2)}
+.v8-panel-loading{padding:20px;color:var(--muted);font-size:.7rem}
+
+.account-xp-banner{margin:0 0 18px;padding:17px 19px;border:1px solid rgba(120,185,255,.17);border-radius:17px;background:linear-gradient(115deg,rgba(120,185,255,.055),rgba(164,132,255,.025));display:grid;grid-template-columns:minmax(220px,.7fr) 1fr auto;gap:18px;align-items:center}.account-xp-banner>div:first-child b{display:block;margin:5px 0 2px;font-size:.82rem}.account-xp-banner>div:first-child small{color:var(--muted);font-size:.58rem}.account-xp-meter{height:7px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}.account-xp-meter i{display:block;width:0;height:100%;background:linear-gradient(90deg,var(--accent),#b8a0ff);transition:width .7s var(--ease)}.account-xp-side{display:grid;gap:4px;text-align:right}.account-xp-side span{font-size:.56rem;color:var(--success)}.account-xp-side a{font-size:.6rem;color:var(--accent2)}
+.account-mission-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.account-open-missions{margin-top:14px}.account-progress-big>span{font-size:.58rem;color:var(--accent2)}.account-progress-big>strong{display:block;margin:8px 0 2px;font-size:1.5rem}.account-progress-big>b{display:block;margin-bottom:13px;color:var(--muted)}.account-progress-big>p{color:var(--muted);font-size:.67rem}.account-progress-big>div:last-child{display:grid;grid-template-columns:1fr 1fr;gap:7px}.account-progress-big>div:last-child span{padding:11px;border:1px solid var(--line);border-radius:10px;font-size:.57rem}.account-progress-big>div:last-child b{float:right;color:#fff}
+.v8-achievement-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.v8-achievement-grid article{padding:13px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.014)}.v8-achievement-grid span{color:var(--accent2);font-size:.45rem;letter-spacing:.09em}.v8-achievement-grid b{display:block;margin-top:7px;font-size:.7rem}.v8-achievement-grid p{margin:4px 0 0;color:var(--muted);font-size:.53rem}
+
+.creator-profile-hero__stats{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.profile-xp-stat b{color:var(--accent2)!important}
+.profile-progress-shell{display:grid;gap:12px}.profile-progress-card{padding:clamp(22px,4vw,38px);border:1px solid rgba(120,185,255,.2);border-radius:24px;background:radial-gradient(circle at 85% 15%,rgba(120,185,255,.09),transparent 25%),linear-gradient(145deg,rgba(255,255,255,.03),rgba(255,255,255,.01));display:grid;grid-template-columns:.7fr 1fr .8fr;gap:35px;align-items:center}.profile-progress-card__rank>span{display:block;color:var(--accent2);font-size:.5rem;letter-spacing:.12em}.profile-progress-card__rank>b{display:block;margin-top:17px;font-size:2.7rem;line-height:1;letter-spacing:-.06em}.profile-progress-card__rank h2{margin:4px 0;font-size:1.4rem}.profile-progress-card__rank p{margin:0;color:var(--muted)}.profile-progress-card__meter>div{display:flex;justify-content:space-between;color:var(--muted);font-size:.52rem}.profile-progress-card__meter>i{height:9px;margin:8px 0;display:block;border-radius:999px;background:rgba(255,255,255,.065);overflow:hidden}.profile-progress-card__meter>i b{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),#b8a0ff)}.profile-progress-card__meter small{color:var(--muted);font-size:.56rem}.profile-progress-card__streak{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.profile-progress-card__streak span{padding:10px 8px;border:1px solid var(--line);border-radius:10px;text-align:center;color:var(--muted);font-size:.51rem}.profile-progress-card__streak b{display:block;color:#fff;font-size:1.15rem}
+.spotter-tier-bronze .creator-avatar--xl{box-shadow:0 0 0 4px rgba(186,132,77,.14),0 0 45px rgba(186,132,77,.12)}
+.spotter-tier-night .creator-profile-hero:after{content:"NIGHT FLIGHT";position:absolute;right:4vw;bottom:50px;color:rgba(120,185,255,.11);font-size:clamp(2.5rem,7vw,7rem);font-weight:900;letter-spacing:-.07em;pointer-events:none}
+.spotter-tier-pulse .creator-avatar--xl{animation:v8ProfilePulse 3.2s ease-in-out infinite}@keyframes v8ProfilePulse{50%{box-shadow:0 0 0 7px rgba(120,185,255,.07),0 0 55px rgba(120,185,255,.22)}}
+.spotter-tier-elite .creator-profile-hero__identity{filter:drop-shadow(0 0 22px rgba(120,185,255,.12))}
+.spotter-tier-legend .creator-profile-hero{box-shadow:inset 0 -2px rgba(183,217,255,.35)}.spotter-tier-legend .creator-avatar--xl{box-shadow:0 0 0 2px rgba(183,217,255,.4),0 0 75px rgba(120,185,255,.28)}
+
+@media(max-width:1100px){
+  .v8-home__head,.missions-hero__grid,.missions-how{grid-template-columns:1fr;gap:35px}.v8-home__status{justify-self:start}.level-roadmap{grid-template-columns:repeat(4,1fr)}
+  .profile-progress-card{grid-template-columns:1fr 1fr}.profile-progress-card__streak{grid-column:1/-1}
+}
+@media(max-width:900px){
+  .v8-home__missions,.mission-grid,.achievement-catalog{grid-template-columns:1fr}
+  .mission-card{min-height:245px}.mission-card h3{margin-top:45px}
+  .level-roadmap{grid-template-columns:repeat(2,1fr)}
+  .account-xp-banner{grid-template-columns:1fr}.account-xp-side{text-align:left}
+  .account-mission-grid{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  .hero-build-cta{grid-template-columns:1fr;gap:5px}.hero-build-cta a{display:grid;gap:2px}
+  .v8-home__head h2{font-size:clamp(3.1rem,16vw,5.5rem)}
+  .missions-hero{min-height:760px;padding:130px 0 65px}.missions-hero h1{font-size:clamp(4.2rem,18vw,6.8rem)}.missions-radar{width:500px;right:-300px;opacity:.45}
+  .mission-profile-card{max-width:520px}.daily-clear{grid-template-columns:1fr;gap:4px}
+  .missions-how h2{font-size:clamp(3rem,14vw,5.4rem)}
+  .xp-ledger article{grid-template-columns:90px 1fr}.xp-ledger article time{grid-column:2}
+  .profile-progress-card{grid-template-columns:1fr;gap:22px}.profile-progress-card__streak{grid-column:auto}
+  .creator-profile-hero__stats{grid-template-columns:repeat(2,1fr)!important}
+}
+@media(max-width:520px){
+  .level-roadmap{grid-template-columns:1fr 1fr}.level-roadmap article{min-height:155px;padding:14px}.level-roadmap b{margin-top:24px}
+  .v8-achievement-grid{grid-template-columns:1fr}.profile-progress-card__streak{grid-template-columns:1fr 1fr 1fr}
+}
+@media(prefers-reduced-motion:reduce){.missions-radar>b,.spotter-tier-pulse .creator-avatar--xl{animation:none!important}}
