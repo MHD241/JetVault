@@ -128,14 +128,13 @@
   }
 
   async function loadStats() {
-    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
-    const [visits, week, views] = await Promise.all([
-      client.from('site_visits').select('id', { count: 'exact', head: true }),
-      client.from('site_visits').select('id', { count: 'exact', head: true }).gte('visited_at', weekAgo),
+    const [active, views] = await Promise.all([
+      client.rpc('active_user_summary'),
       client.from('photo_views').select('id', { count: 'exact', head: true })
     ]);
-    $('[data-stat-visits]').textContent = visits.count ?? '—';
-    $('[data-stat-week]').textContent = week.count ?? '—';
+    const row = Array.isArray(active.data) ? active.data[0] : active.data;
+    $('[data-stat-visits]').textContent = active.error ? '—' : (row?.active_30d ?? 0);
+    $('[data-stat-week]').textContent = active.error ? '—' : (row?.active_7d ?? 0);
     $('[data-stat-views]').textContent = views.count ?? '—';
     $('[data-stat-photos]').textContent = adminPhotos.length;
   }

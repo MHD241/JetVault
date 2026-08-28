@@ -127,7 +127,27 @@
   }
   function invalidateContent() { contentPromise = null; profilesPromise = null; }
   function runIdle(task) { if ('requestIdleCallback' in window) requestIdleCallback(task, { timeout: 1800 }); else setTimeout(task, 500); }
-  function trackVisit(path = location.pathname) { if (!configured) return; runIdle(async () => { const db = await ensureClient(); if (!db) return; try { await db.from('site_visits').insert({ path }); } catch (_) {} }); }
+  function getActiveVisitorId() {
+    const key = 'sa_active_visitor_v10';
+    try {
+      let id = localStorage.getItem(key);
+      if (!id) { id = crypto.randomUUID(); localStorage.setItem(key, id); }
+      return id;
+    } catch (_) {
+      try {
+        let id = sessionStorage.getItem(key);
+        if (!id) { id = crypto.randomUUID(); sessionStorage.setItem(key, id); }
+        return id;
+      } catch (_) { return crypto.randomUUID(); }
+    }
+  }
+  function trackVisit(path = location.pathname) {
+    if (!configured) return;
+    runIdle(async () => {
+      const db = await ensureClient(); if (!db) return;
+      try { await db.rpc('touch_active_user', { p_visitor_id: getActiveVisitorId(), p_path: String(path || location.pathname).slice(0,300) }); } catch (_) {}
+    });
+  }
   function trackPhotoView(photoId) { if (!configured || !photoId) return; runIdle(async () => { const db = await ensureClient(); if (!db) return; try { await db.from('photo_views').insert({ photo_id: photoId }); } catch (_) {} }); }
 
   window.ScottishAeroBackend = { configured, client: buildClient(), ensureClient, getRows, getProfiles, getData, getPhotos, getPosts, getPhotographers, getCurrentProfile, getProfileByKey, invalidateContent, trackVisit, trackPhotoView, slugify, formatDate, dbPhotoToSite, rowToPost, rowToProfileMeta, profileToSite, META_PROFILE, META_POST };

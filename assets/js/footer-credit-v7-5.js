@@ -17,6 +17,22 @@
     }
   }
 
+
+  function ensureV10Assets() {
+    if (!document.querySelector('link[href="assets/css/styles-v10.css"]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'assets/css/styles-v10.css';
+      document.head.append(link);
+    }
+    if (!document.querySelector('script[src="assets/js/economy-v10.js"]')) {
+      const script = document.createElement('script');
+      script.src = 'assets/js/economy-v10.js';
+      script.async = false;
+      document.body.append(script);
+    }
+  }
+
   function mount() {
     document.querySelectorAll('.site-nav').forEach(nav => {
       if (!nav.querySelector('a[href="missions.html"]')) {
@@ -60,6 +76,12 @@
         a.textContent='World Map';
         gallery.insertAdjacentElement('afterend',a);
       }
+      if (!col.querySelector('a[href="aerocoins.html"]') && (games || gallery)) {
+        const a = document.createElement('a');
+        a.href='aerocoins.html';
+        a.textContent='AeroCoins';
+        col.append(a);
+      }
     });
 
     document.querySelectorAll('.site-footer .site-shell').forEach(shell => {
@@ -73,9 +95,10 @@
 
     const ribbon = document.querySelector('[data-development-ribbon]');
     const version = ribbon?.querySelector('b');
-    if (version) version.textContent = 'V8.2 · PASSPORT + WORLD';
+    if (version) version.textContent = 'V10 · COMMUNITY ECONOMY';
 
     ensureExploreAssets();
+    ensureV10Assets();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount, {once:true});
