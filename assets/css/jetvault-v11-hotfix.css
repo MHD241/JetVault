@@ -1,0 +1,107 @@
+/* Jetvault V11 — Safari/gallery stability + public views */
+
+/* Keep the giant homepage headline inside the viewport on Safari and browser zoom. */
+.jv-hero__inner{
+  padding-left:clamp(12px,1.4vw,26px);
+  padding-right:clamp(12px,1.4vw,26px);
+}
+.jv-hero h1{
+  max-width:100%;
+  font-size:clamp(58px,8.15vw,134px);
+  line-height:.86;
+  letter-spacing:-.064em;
+  overflow-wrap:normal;
+  word-break:keep-all;
+}
+
+/* Safari can leave large blank paints when transformed cards live in CSS columns.
+   Use a stable responsive grid instead. */
+.gallery-grid{
+  columns:unset!important;
+  column-gap:unset!important;
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+  align-items:start;
+}
+.gallery-grid .photo-card{
+  width:100%;
+  min-width:0;
+  margin:0!important;
+  break-inside:auto!important;
+  contain:layout paint;
+  transform:translateZ(0);
+}
+.gallery-grid .photo-card__open{
+  position:relative;
+  display:block;
+  width:100%;
+  min-height:260px;
+  overflow:hidden;
+  background:linear-gradient(145deg,#101a25,#081019 70%);
+}
+.gallery-grid .photo-card__open>img{
+  display:block;
+  width:100%;
+  min-height:260px;
+  max-height:560px;
+  object-fit:cover;
+  background:#0b121a;
+  transform:translateZ(0);
+}
+.gallery-grid .photo-card[data-image-error="1"]{display:none!important}
+.photo-card__social{opacity:1!important;transform:none!important}
+.photo-card__view-count{
+  min-width:48px;
+  height:34px;
+  padding:0 9px;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:999px;
+  background:rgba(6,9,13,.72);
+  backdrop-filter:blur(9px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  color:rgba(255,255,255,.9);
+  font:700 11px/1 Inter,system-ui,sans-serif;
+  box-shadow:0 8px 24px rgba(0,0,0,.18);
+  pointer-events:none;
+}
+.photo-card__view-count i{font-style:normal;color:#9fd0ff;font-size:13px}
+.jv-lightbox-view{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-height:38px;
+  padding:0 13px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:999px;
+  color:rgba(255,255,255,.78);
+  background:rgba(255,255,255,.03);
+  font-size:.72rem;
+  font-weight:750;
+}
+.jv-lightbox-view b{color:#fff}
+.jv-launch-disclosure{
+  display:block;
+  flex-basis:100%;
+  width:100%;
+  margin-top:7px;
+  color:#7f8c9a;
+  font-size:10px;
+  line-height:1.45;
+  font-weight:500;
+}
+.sa-build-credit{flex-wrap:wrap}
+
+@media(max-width:1080px){
+  .gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .jv-hero h1{font-size:clamp(58px,11vw,112px)}
+}
+@media(max-width:680px){
+  .gallery-grid{grid-template-columns:1fr}
+  .gallery-grid .photo-card__open>img{max-height:none}
+  .jv-hero__inner{padding-left:8px;padding-right:8px}
+  .jv-hero h1{font-size:clamp(54px,18vw,86px);letter-spacing:-.055em}
+}

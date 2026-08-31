@@ -93,7 +93,7 @@
       if(bottom) bottom.innerHTML='<span>© <span data-year></span> Jetvault</span><span>Aviation. Shared.</span>';
       if(!shell.querySelector('[data-build-credit]')){
         const row=document.createElement('div'); row.className='sa-build-credit'; row.dataset.buildCredit='';
-        row.innerHTML='<span>Design &amp; development by <b>Mohammed</b></span><a href="credits.html">Build credits ↗</a>';
+        row.innerHTML='<span>Design &amp; development by <b>Mohammed</b></span><a href="credits.html">Build credits ↗</a><small class="jv-launch-disclosure">During launch, some site-curated content and promotional engagement may be used to demonstrate Jetvault features.</small>';
         shell.append(row);
       }
     });
@@ -125,6 +125,8 @@
 
   function mount(){
     ensureStyle('assets/css/jetvault-clean.css');
+    ensureStyle('assets/css/jetvault-v11-hotfix.css');
+    if(page==='gallery.html') ensureScript('assets/js/gallery-views-v11.js');
     if(ADVANCED_EXPLORE.has(page)){
       ensureStyle('assets/css/styles-v8-1-2.css');
       ensureScript('assets/js/explore-v8-1-2.js');

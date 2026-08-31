@@ -4,7 +4,7 @@
 
   const backend = window.ScottishAeroBackend;
   if (!backend) return;
-  const esc = v => String(v ?? '').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const esc = v => String(v ?? '').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt',"'":'&#39;','"':'&quot;'}[c]));
 
   let db, user, profile, tab, panel;
 
@@ -46,7 +46,7 @@
     panel.hidden = true;
     panel.innerHTML = `
       <div class="studio-section-head">
-        <span class="eyebrow">V7.5 / Mohammed</span>
+        <span class="eyebrow">Mohammed</span>
         <h2>Website enquiries.</h2>
         <p>Private messages from people interested in having a website built.</p>
       </div>
@@ -145,5 +145,15 @@
     });
   }
 
-  boot().catch(error => console.warn('V7.5 web enquiries unavailable', error));
+  boot().catch(error => console.warn('Jetvault web enquiries unavailable', error));
+})();
+
+/* V11 manager console loader — admin.html already loads this file, so no HTML edit is needed. */
+(() => {
+  if (!document.querySelector('link[href="assets/css/manager-v11.css"]')) {
+    const link=document.createElement('link'); link.rel='stylesheet'; link.href='assets/css/manager-v11.css'; document.head.append(link);
+  }
+  if (!document.querySelector('script[src="assets/js/admin-manager-v11.js"]')) {
+    const script=document.createElement('script'); script.src='assets/js/admin-manager-v11.js'; script.defer=true; document.body.append(script);
+  }
 })();
