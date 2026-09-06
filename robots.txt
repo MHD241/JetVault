@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
-Disallow: /admin.html
-Disallow: /crew-access-setup-7f3d.html
+Sitemap: https://mhd241.github.io/JetVault/

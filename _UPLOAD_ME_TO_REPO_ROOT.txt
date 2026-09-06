@@ -1,0 +1,13 @@
+JETVAULT V12 REWRITE
+
+1. Extract this ZIP.
+2. Upload the CONTENTS of the JetVault-V12-Rewrite folder to the ROOT of MHD241/JetVault.
+3. Let files with the same names replace the old versions.
+4. DO NOT delete assets/images/photos from the repository.
+5. GitHub Pages should redeploy automatically.
+
+The important repair files are included:
+- assets/js/backend-v7.js
+- assets/js/gallery-v7-2.js
+
+The old corrupted gallery file will be replaced by real JavaScript.
