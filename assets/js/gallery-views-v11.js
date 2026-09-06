@@ -1,6 +1,6 @@
 (() => {
-  // JetVault compatibility shim: the fast gallery now handles visible-card
-  // view counts itself. No body-wide MutationObserver is installed.
+  // Compatibility only. The fast gallery owns view counters now.
+  // Critically: NO body-wide MutationObserver.
   if (window.__JETVAULT_GALLERY_VIEWS_V11__) return;
   window.__JETVAULT_GALLERY_VIEWS_V11__ = true;
 
@@ -12,7 +12,6 @@
       node.textContent = (node.textContent || '').replace(/SCOTTISH\.AERO/gi, 'JETVAULT');
     });
   };
-
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => clean(), { once: true });
   } else clean();

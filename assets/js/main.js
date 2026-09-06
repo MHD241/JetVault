@@ -1,5 +1,12 @@
 (() => {
   const body = document.body;
+
+  // Never let the decorative transition become a blocking loading screen.
+  // The exact same CSS transition still runs; this simply guarantees release.
+  body.classList.add('page-ready');
+  addEventListener('pageshow', () => body.classList.add('page-ready'), { passive: true });
+  setTimeout(() => body.classList.add('page-ready'), 900);
+
   const header = document.querySelector('.site-header');
   const navToggle = document.querySelector('[data-nav-toggle]');
   const nav = document.querySelector('[data-nav]');
@@ -89,7 +96,6 @@
     });
   }
 
-  // Content is already visible underneath; this is a quick polish, not a blocking intro.
   requestAnimationFrame(() => body.classList.add('page-ready'));
   window.ScottishAeroBackend?.trackVisit();
 })();
