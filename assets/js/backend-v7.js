@@ -1,231 +1,389 @@
 (() => {
-  if (window.__JETVAULT_BACKEND_V12__) return;
-  window.__JETVAULT_BACKEND_V12__ = true;
-
-  const cfg = window.JETVAULT_CONFIG || window.SCOTTISH_AERO_CONFIG || {};
+  const fallback = window.SCOTTISH_AERO || { photographers: [], airports: [], photos: [], posts: [] };
+  const cfg = window.SCOTTISH_AERO_CONFIG || {};
   const META_PROFILE = '__SA_PROFILE__';
   const META_POST = '__SA_POST__';
+  const configured = Boolean(cfg.supabaseUrl && cfg.supabaseAnonKey && !cfg.supabaseUrl.includes('PASTE_') && !cfg.supabaseAnonKey.includes('PASTE_'));
   let client = null;
+  let clientPromise = null;
+  let contentPromise = null;
+  let profilesPromise = null;
+  const fullImageById = new Map();
 
-  const escSearch = v => String(v || '').replace(/[(),]/g,' ').replace(/\s+/g,' ').trim();
-  const slugify = v => String(v || '').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-  const formatDate = v => {
-    if (!v) return 'Unknown';
-    try { return new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(String(v).includes('T') ? v : `${v}T12:00:00`)); }
-    catch(_) { return 'Unknown'; }
+  const slugify = value => String(value || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const formatDate = value => {
+    if (!value) return 'Unknown';
+    try {
+      const raw = String(value);
+      const date = raw.includes('T') ? new Date(raw) : new Date(`${raw}T12:00:00`);
+      return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
+    } catch (_) { return 'Unknown'; }
   };
 
-  async function ensureLibrary(){
-    if (window.supabase?.createClient) return;
-    await new Promise((resolve,reject)=>{
-      const s=document.createElement('script');
-      s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-      s.onload=resolve;s.onerror=reject;document.head.append(s);
-    });
-  }
-
-  async function ensureClient(){
-    if (client) return client;
-    await ensureLibrary();
-    client = window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{
-      auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
-    });
+  function buildClient() {
+    if (client || !configured || !window.supabase?.createClient) return client;
+    client = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+    if (window.ScottishAeroBackend) window.ScottishAeroBackend.client = client;
     return client;
   }
 
-  function mapPhoto(r){
-    const fullUrl = r.image_url || '';
-    const thumbUrl = String(r.thumbnail_url || '').trim() || fullUrl;
-    return {
-      id:r.id,ownerId:r.owner_id,photographerName:r.photographer_name || 'Unknown',
-      photographer:slugify(r.photographer_name),fullUrl,thumbUrl,src:thumbUrl,
-      reg:r.registration || 'Unknown',aircraft:r.aircraft_type || 'Unknown',
-      airline:r.airline || 'Unknown',airport:r.airport || 'Unknown',
-      takenAt:r.taken_at || null,date:formatDate(r.taken_at),caption:r.caption || '',
-      alt:r.alt_text || `${r.airline || 'Aircraft'} ${r.aircraft_type || ''}`.trim(),
-      ratio:r.ratio || 'standard',featured:Boolean(r.featured),createdAt:r.created_at || null,status:r.status || 'approved'
-    };
-  }
-
-  async function currentUser(){
-    const db=await ensureClient(); const {data}=await db.auth.getSession();
-    return data?.session?.user || null;
-  }
-
-  async function currentProfile(){
-    const db=await ensureClient(); const user=await currentUser(); if(!user) return null;
-    const {data,error}=await db.from('profiles').select('*').eq('id',user.id).maybeSingle();
-    if(error) throw error; return data || null;
-  }
-
-  async function getProfile(key){
-    const db=await ensureClient(); const wanted=String(key||'').trim();
-    if(!wanted) return null;
-    let q=await db.from('profiles').select('*').eq('username',wanted.toLowerCase()).maybeSingle();
-    if(q.data) return q.data;
-    const {data}=await db.from('profiles').select('*').limit(150);
-    return (data||[]).find(p=>slugify(p.display_name)===wanted.toLowerCase()) || null;
-  }
-
-  async function listProfiles(){
-    const db=await ensureClient();
-    const {data,error}=await db.from('profiles').select('id,display_name,username,bio,avatar_url,location,favourite_airport,favourite_aircraft,is_manager,is_crew,created_at').order('is_crew',{ascending:false}).order('created_at',{ascending:true});
-    if(error) throw error; return data || [];
-  }
-
-  async function listPhotos(opts={}){
-    const db=await ensureClient();
-    const page=Math.max(0,Number(opts.page||0)), pageSize=Math.max(1,Math.min(60,Number(opts.pageSize||24)));
-    let q=db.from('photos').select('id,owner_id,photographer_name,image_url,thumbnail_url,registration,aircraft_type,airline,airport,taken_at,caption,alt_text,ratio,featured,created_at,status',{count:'exact'})
-      .eq('status',opts.status || 'approved')
-      .not('registration','in',`("${META_PROFILE}","${META_POST}")`);
-    if(opts.featured===true) q=q.eq('featured',true);
-    if(opts.ownerId) q=q.eq('owner_id',opts.ownerId);
-    if(opts.airport) q=q.eq('airport',opts.airport);
-    if(opts.airline) q=q.eq('airline',opts.airline);
-    const s=escSearch(opts.search);
-    if(s) q=q.or(`registration.ilike.%${s}%,aircraft_type.ilike.%${s}%,airline.ilike.%${s}%,airport.ilike.%${s}%,photographer_name.ilike.%${s}%`);
-    q=q.order('featured',{ascending:false}).order('created_at',{ascending:false}).range(page*pageSize,page*pageSize+pageSize-1);
-    const {data,error,count}=await q;
-    if(error) throw error;
-    return {items:(data||[]).map(mapPhoto),count:Number(count||0),page,pageSize};
-  }
-
-  async function getPhoto(id){
-    const db=await ensureClient();
-    const {data,error}=await db.from('photos').select('id,owner_id,photographer_name,image_url,thumbnail_url,registration,aircraft_type,airline,airport,taken_at,caption,alt_text,ratio,featured,created_at,status').eq('id',id).maybeSingle();
-    if(error) throw error; return data ? mapPhoto(data) : null;
-  }
-
-  async function filterData(){
-    const db=await ensureClient();
-    const {data,error}=await db.from('photos').select('airport,airline').eq('status','approved').not('registration','in',`("${META_PROFILE}","${META_POST}")`).limit(1000);
-    if(error) throw error;
-    return {
-      airports:[...new Set((data||[]).map(x=>x.airport).filter(Boolean))].sort(),
-      airlines:[...new Set((data||[]).map(x=>x.airline).filter(Boolean))].sort()
-    };
-  }
-
-  async function getSocialCounts(ids){
-    ids=[...new Set((ids||[]).filter(Boolean))];
-    if(!ids.length) return {};
-    const db=await ensureClient();
-    const [likes,comments,user]=await Promise.all([
-      db.from('content_likes').select('content_id').in('content_id',ids),
-      db.from('comments').select('content_id').in('content_id',ids),
-      currentUser()
-    ]);
-    let mine={data:[]};
-    if(user) mine=await db.from('content_likes').select('content_id').eq('user_id',user.id).in('content_id',ids);
-    const out={}; ids.forEach(id=>out[id]={likes:0,comments:0,liked:false});
-    (likes.data||[]).forEach(x=>{if(out[x.content_id])out[x.content_id].likes++});
-    (comments.data||[]).forEach(x=>{if(out[x.content_id])out[x.content_id].comments++});
-    (mine.data||[]).forEach(x=>{if(out[x.content_id])out[x.content_id].liked=true});
-    return out;
-  }
-
-  async function toggleLike(photoId){
-    const db=await ensureClient(), user=await currentUser();
-    if(!user) throw new Error('Sign in to like photographs.');
-    const {data:existing}=await db.from('content_likes').select('content_id').eq('content_id',photoId).eq('user_id',user.id).maybeSingle();
-    if(existing) {
-      const {error}=await db.from('content_likes').delete().eq('content_id',photoId).eq('user_id',user.id);
-      if(error) throw error;
-    } else {
-      const {error}=await db.from('content_likes').insert({content_id:photoId,user_id:user.id});
-      if(error) throw error;
-    }
-    return (await getSocialCounts([photoId]))[photoId];
-  }
-
-  async function getComments(photoId){
-    const db=await ensureClient();
-    const {data,error}=await db.from('comments').select('id,user_id,author_name,body,created_at,parent_id').eq('content_id',photoId).order('created_at',{ascending:true}).limit(100);
-    if(error) throw error; return data || [];
-  }
-
-  async function addComment(photoId,body){
-    const db=await ensureClient(), user=await currentUser(), profile=await currentProfile();
-    if(!user) throw new Error('Sign in to comment.');
-    const text=String(body||'').trim(); if(!text) throw new Error('Write a comment first.');
-    const {error}=await db.from('comments').insert({content_id:photoId,user_id:user.id,author_name:profile?.display_name||user.email||'Member',body:text.slice(0,800)});
-    if(error) throw error;
-  }
-
-  async function trackPhotoView(photoId){
-    try{
-      const db=await ensureClient();
-      await db.from('photo_views').insert({photo_id:photoId,source:'organic'});
-    }catch(_){}
-  }
-
-  async function stats(){
-    const db=await ensureClient();
-    const [p,u,c]=await Promise.all([
-      db.from('photos').select('id',{count:'exact',head:true}).eq('status','approved').not('registration','in',`("${META_PROFILE}","${META_POST}")`),
-      db.from('profiles').select('id',{count:'exact',head:true}),
-      db.from('profiles').select('id',{count:'exact',head:true}).eq('is_crew',true)
-    ]);
-    return {photos:Number(p.count||0),members:Number(u.count||0),crew:Number(c.count||0)};
-  }
-
-  async function decodeImage(blob){
-    if('createImageBitmap' in window){
-      try{
-        const bmp=await createImageBitmap(blob);
-        return {width:bmp.width,height:bmp.height,draw:(ctx,w,h)=>ctx.drawImage(bmp,0,0,w,h),close:()=>bmp.close?.()};
-      }catch(_){}
-    }
-    return await new Promise((resolve,reject)=>{
-      const url=URL.createObjectURL(blob), img=new Image();
-      img.onload=()=>resolve({width:img.naturalWidth,height:img.naturalHeight,draw:(ctx,w,h)=>ctx.drawImage(img,0,0,w,h),close:()=>URL.revokeObjectURL(url)});
-      img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Could not decode this image.'))};
-      img.src=url;
+  function loadSupabaseLibrary() {
+    if (window.supabase?.createClient) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[data-scottish-aero-supabase]');
+      if (existing) {
+        if (window.supabase?.createClient) return resolve();
+        existing.addEventListener('load', resolve, { once: true }); existing.addEventListener('error', reject, { once: true }); return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'; script.async = true; script.dataset.scottishAeroSupabase = 'true';
+      script.onload = resolve; script.onerror = reject; document.head.append(script);
     });
   }
 
-  async function renderWebp(source,maxSide,quality){
-    const scale=Math.min(1,maxSide/Math.max(source.width,source.height));
-    const w=Math.max(1,Math.round(source.width*scale)), h=Math.max(1,Math.round(source.height*scale));
-    const canvas=document.createElement('canvas'); canvas.width=w; canvas.height=h;
-    const ctx=canvas.getContext('2d',{alpha:false}); ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-    source.draw(ctx,w,h);
-    const blob=await new Promise(r=>canvas.toBlob(r,'image/webp',quality));
-    if(!blob || blob.type!=='image/webp') throw new Error('Your browser could not create WebP.');
-    return {blob,width:w,height:h};
+  async function ensureClient() {
+    if (client) return client;
+    if (!configured) return null;
+    if (!clientPromise) clientPromise = (async () => { await loadSupabaseLibrary(); return buildClient(); })().catch(error => { console.warn('Jetvault backend unavailable.', error); clientPromise = null; return null; });
+    return clientPromise;
   }
 
-  async function makeThumbnailBlob(blob,maxSide=960){
-    const src=await decodeImage(blob);
-    try{return (await renderWebp(src,maxSide,.72)).blob} finally{src.close?.()}
-  }
-
-  async function uploadPhotoPair(file,userId,prefix='photo'){
-    if(!file?.type?.startsWith('image/')) throw new Error('Choose a photograph first.');
-    if(file.size>25*1024*1024) throw new Error('Please keep uploads under 25 MB.');
-    const db=await ensureClient(), src=await decodeImage(file);
-    let full,thumb;
-    try{
-      full=await renderWebp(src,2560,.84);
-      thumb=await renderWebp(src,960,.72);
-    } finally { src.close?.(); }
-    const id=crypto.randomUUID(), base=`${userId}/${prefix}-${id}`;
-    const up=async(path,blob)=>{
-      const {error}=await db.storage.from('photos').upload(path,blob,{contentType:'image/webp',cacheControl:'31536000',upsert:false});
-      if(error) throw error;
-      return db.storage.from('photos').getPublicUrl(path).data.publicUrl;
+  const dbPhotoToSite = row => {
+    const fullSrc = /^assets\/images\/photos\/arran-.*\.jpg$/i.test(row.image_url || '') ? row.image_url.replace(/\.jpg$/i, '.webp') : row.image_url;
+    const thumbSrc = String(row.thumbnail_url || '').trim() || fullSrc;
+    if (row.id && fullSrc) fullImageById.set(String(row.id), fullSrc);
+    return {
+      id: row.id,
+      // JetVault V1 image pipeline: cards use thumbnails; fullSrc is preserved for the viewer.
+      src: thumbSrc,
+      thumbSrc,
+      fullSrc,
+      alt: row.alt_text || `${row.airline || 'Aircraft'} ${row.aircraft_type || ''}`.trim(),
+      reg: row.registration || 'Unknown', aircraft: row.aircraft_type || 'Unknown', airline: row.airline || 'Unknown', airport: row.airport || 'Unknown',
+      date: formatDate(row.taken_at), takenAt: row.taken_at || null, photographer: slugify(row.photographer_name), photographerName: row.photographer_name || 'Unknown',
+      ratio: row.ratio || 'standard', caption: row.caption || '', featured: Boolean(row.featured), ownerId: row.owner_id || null,
+      createdAt: row.created_at || null, status: row.status || 'approved', moderationNote: row.moderation_note || ''
     };
-    const [imageUrl,thumbnailUrl]=await Promise.all([
-      up(`${base}-full.webp`,full.blob),up(`${base}-thumb.webp`,thumb.blob)
-    ]);
-    const ratioValue=full.width/full.height;
-    return {imageUrl,thumbnailUrl,ratio:ratioValue>1.55?'wide':ratioValue<.9?'tall':'standard'};
+  };
+
+  const rowToPost = row => ({ id: row.id, title: row.aircraft_type && row.aircraft_type !== 'Unknown' ? row.aircraft_type : 'Crew update', body: row.caption || '', image: row.image_url || '', imageAlt: row.alt_text || row.aircraft_type || 'Jetvault post', photographer: slugify(row.photographer_name), photographerName: row.photographer_name || 'Unknown', createdAt: row.created_at || null, date: formatDate(row.created_at), ownerId: row.owner_id || null, status: row.status || 'approved' });
+  const rowToProfileMeta = row => ({ photographer: slugify(row.photographer_name), photographerName: row.photographer_name || 'Unknown', bio: row.caption || '', avatar: row.image_url || '', updatedAt: row.updated_at || row.created_at || null, rowId: row.id, ownerId: row.owner_id || null });
+  const profileToSite = row => ({
+    id: row.username || slugify(row.display_name), username: row.username || slugify(row.display_name), name: row.display_name || 'Aviation photographer', bio: row.bio || '', avatar: row.avatar_url || '',
+    location: row.location || '', favouriteAirport: row.favourite_airport || '', favouriteAircraft: row.favourite_aircraft || '', accountId: row.id, isManager: Boolean(row.is_manager), isCrew: Boolean(row.is_crew), createdAt: row.created_at || null, updatedAt: row.updated_at || row.created_at || null
+  });
+
+  async function getRows({ fresh = false } = {}) {
+    if (!fresh && contentPromise) return contentPromise;
+    const task = (async () => {
+      const db = await ensureClient(); if (!db) return null;
+      const { data, error } = await db.from('photos').select('*').order('featured', { ascending: false }).order('sort_order', { ascending: true }).order('created_at', { ascending: false });
+      if (error) throw error; return data || [];
+    })().catch(error => { console.warn('Jetvault: using bundled content fallback.', error.message); return null; });
+    if (!fresh) contentPromise = task; return task;
   }
 
-  async function signOut(){ const db=await ensureClient(); await db.auth.signOut(); }
+  async function getProfiles({ fresh = false } = {}) {
+    if (!fresh && profilesPromise) return profilesPromise;
+    const task = (async () => {
+      const db = await ensureClient(); if (!db) return [];
+      const { data, error } = await db.from('profiles').select('id,display_name,username,bio,avatar_url,location,favourite_airport,favourite_aircraft,is_manager,is_crew,created_at,updated_at').order('is_crew', { ascending: false }).order('created_at', { ascending: true });
+      if (error) throw error; return data || [];
+    })().catch(error => { console.warn('Jetvault profiles unavailable.', error.message); return []; });
+    if (!fresh) profilesPromise = task; return task;
+  }
 
-  const api={configured:Boolean(cfg.supabaseUrl&&cfg.supabaseAnonKey),ensureClient,currentUser,currentProfile,getProfile,listProfiles,listPhotos,getPhoto,filterData,getSocialCounts,toggleLike,getComments,addComment,trackPhotoView,stats,uploadPhotoPair,makeThumbnailBlob,mapPhoto,formatDate,slugify,signOut,META_PROFILE,META_POST};
-  window.JetVault=api;
-  window.ScottishAeroBackend=api;
+  function mergePhotographers(profileRows = [], metaRows = []) {
+    const metaByOwner = new Map();
+    for (const row of metaRows) if (row.owner_id && !metaByOwner.has(row.owner_id)) metaByOwner.set(row.owner_id, rowToProfileMeta(row));
+    const fallbackByName = new Map((fallback.photographers || []).map(p => [p.name, p]));
+    const mapped = profileRows.map(row => {
+      const base = profileToSite(row); const local = fallbackByName.get(row.display_name) || {}; const meta = metaByOwner.get(row.id);
+      const profileStamp = Date.parse(base.updatedAt || 0) || 0, metaStamp = Date.parse(meta?.updatedAt || 0) || 0;
+      const preferMeta = Boolean(meta && metaStamp > profileStamp);
+      return { ...local, ...base, id: base.username, bio: preferMeta ? (meta.bio || base.bio || local.bio || '') : (base.bio || meta?.bio || local.bio || ''), avatar: preferMeta ? (meta.avatar || base.avatar || local.avatar || '') : (base.avatar || meta?.avatar || local.avatar || '') };
+    });
+    if (!mapped.length) return (fallback.photographers || []).map(p => ({ ...p, username: p.id, isCrew: true, isManager: false, accountId: null }));
+    return mapped.sort((a,b) => Number(b.isCrew) - Number(a.isCrew) || a.name.localeCompare(b.name));
+  }
+
+  async function getData({ fresh = false } = {}) {
+    const [rows, profileRows] = await Promise.all([getRows({ fresh }), getProfiles({ fresh })]);
+    if (!rows) return { photographers: mergePhotographers(profileRows, []), airports: fallback.airports || [], photos: fallback.photos || [], posts: fallback.posts || [] };
+    const metaRows = rows.filter(row => row.registration === META_PROFILE);
+    const postRows = rows.filter(row => row.registration === META_POST && (row.status || 'approved') === 'approved');
+    const publicPhotoRows = rows.filter(row => row.registration !== META_PROFILE && row.registration !== META_POST && (row.status || 'approved') === 'approved');
+    const photographers = mergePhotographers(profileRows, metaRows);
+    const byAccount = new Map(photographers.filter(p => p.accountId).map(p => [p.accountId, p]));
+    const byName = new Map(photographers.map(p => [p.name, p]));
+    const decorate = photo => {
+      const person = byAccount.get(photo.ownerId) || byName.get(photo.photographerName);
+      return { ...photo, photographer: person?.username || person?.id || photo.photographer, isCrew: Boolean(person?.isCrew), photographerAvatar: person?.avatar || '' };
+    };
+    return { photographers, airports: fallback.airports || [], photos: publicPhotoRows.map(dbPhotoToSite).map(decorate), posts: postRows.map(rowToPost).map(decorate) };
+  }
+
+  async function getPhotos(options) { return (await getData(options)).photos; }
+  async function getPosts(options) { return (await getData(options)).posts; }
+  async function getPhotographers(options) { return (await getData(options)).photographers; }
+  async function getCurrentProfile() {
+    const db = await ensureClient(); if (!db) return null;
+    const { data: session } = await db.auth.getSession(); const user = session?.session?.user; if (!user) return null;
+    const { data, error } = await db.from('profiles').select('*').eq('id', user.id).maybeSingle(); if (error) throw error; return data || null;
+  }
+  async function getProfileByKey(key, options) {
+    const people = await getPhotographers(options); const wanted = String(key || '').toLowerCase();
+    return people.find(p => String(p.username || p.id).toLowerCase() === wanted || slugify(p.name) === wanted) || null;
+  }
+  function invalidateContent() { contentPromise = null; profilesPromise = null; }
+  function runIdle(task) { if ('requestIdleCallback' in window) requestIdleCallback(task, { timeout: 1800 }); else setTimeout(task, 500); }
+  function getActiveVisitorId() {
+    const key = 'sa_active_visitor_v10';
+    try {
+      let id = localStorage.getItem(key);
+      if (!id) { id = crypto.randomUUID(); localStorage.setItem(key, id); }
+      return id;
+    } catch (_) {
+      try {
+        let id = sessionStorage.getItem(key);
+        if (!id) { id = crypto.randomUUID(); sessionStorage.setItem(key, id); }
+        return id;
+      } catch (_) { return crypto.randomUUID(); }
+    }
+  }
+  function trackVisit(path = location.pathname) {
+    if (!configured) return;
+    runIdle(async () => {
+      const db = await ensureClient(); if (!db) return;
+      try { await db.rpc('touch_active_user', { p_visitor_id: getActiveVisitorId(), p_path: String(path || location.pathname).slice(0,300) }); } catch (_) {}
+    });
+  }
+  function trackPhotoView(photoId) { if (!configured || !photoId) return; runIdle(async () => { const db = await ensureClient(); if (!db) return; try { await db.from('photo_views').insert({ photo_id: photoId }); } catch (_) {} }); }
+
+  // ---------------------------------------------------------------------------
+  // JetVault Image Pipeline V1
+  // One-file compatibility layer: real WebP conversion, thumbnails, old-archive
+  // background migration, and full-resolution lightbox upgrades.
+  // ---------------------------------------------------------------------------
+
+  async function makeWebpVariant(source, { maxSide = 2400, quality = .84, square = false } = {}) {
+    const bitmap = await createImageBitmap(source);
+    let sx = 0, sy = 0, sw = bitmap.width, sh = bitmap.height;
+    if (square) {
+      const side = Math.min(sw, sh);
+      sx = Math.floor((sw - side) / 2); sy = Math.floor((sh - side) / 2); sw = sh = side;
+    }
+    const scale = Math.min(1, maxSide / Math.max(sw, sh));
+    const width = Math.max(1, Math.round(sw * scale));
+    const height = Math.max(1, Math.round(sh * scale));
+    const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
+    const ctx = canvas.getContext('2d', { alpha: false });
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(bitmap, sx, sy, sw, sh, 0, 0, width, height);
+    bitmap.close?.();
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
+    if (!blob || blob.type !== 'image/webp') throw new Error('This browser could not create a real WebP image.');
+    return { blob, width, height };
+  }
+
+  async function uploadPrepared(db, userId, path, blob) {
+    const up = await db.storage.from('photos').upload(path, blob, { contentType: 'image/webp', cacheControl: '31536000', upsert: true });
+    if (up.error) throw up.error;
+    return db.storage.from('photos').getPublicUrl(path).data.publicUrl;
+  }
+
+  async function uploadPhotoPair(db, userId, file, prefix = 'photo') {
+    if (!file?.type?.startsWith('image/')) throw new Error('Please choose an image file.');
+    if (file.size > 25 * 1024 * 1024) throw new Error('Please keep photographs below 25 MB.');
+    const id = crypto.randomUUID();
+    // Never rename an original fallback to .webp. Both outputs must be genuine WebP blobs.
+    const [full, thumb] = await Promise.all([
+      makeWebpVariant(file, { maxSide: 2560, quality: .84 }),
+      makeWebpVariant(file, { maxSide: 1100, quality: .72 })
+    ]);
+    const base = `${userId}/${prefix}-${id}`;
+    const [imageUrl, thumbnailUrl] = await Promise.all([
+      uploadPrepared(db, userId, `${base}-full.webp`, full.blob),
+      uploadPrepared(db, userId, `${base}-thumb.webp`, thumb.blob)
+    ]);
+    const ratioValue = full.width / full.height;
+    const ratio = ratioValue > 1.55 ? 'wide' : ratioValue < .9 ? 'tall' : 'standard';
+    return { imageUrl, thumbnailUrl, ratio };
+  }
+
+  function showPipelineMessage(node, text, ok = false) {
+    if (!node) return;
+    node.textContent = text || '';
+    node.classList.add('show');
+    node.classList.toggle('form-success', ok);
+    node.classList.toggle('form-error', !ok);
+  }
+
+  async function currentUserAndProfile(db) {
+    const { data } = await db.auth.getSession();
+    const user = data?.session?.user || null;
+    if (!user) return { user: null, profile: null };
+    const p = await db.from('profiles').select('*').eq('id', user.id).maybeSingle();
+    return { user, profile: p.data || null };
+  }
+
+  function installUploadInterceptors() {
+    const communityForm = document.querySelector('[data-community-upload-form]');
+    if (communityForm && !communityForm.dataset.jvImagePipeline) {
+      communityForm.dataset.jvImagePipeline = '1';
+      communityForm.addEventListener('submit', async e => {
+        e.preventDefault(); e.stopImmediatePropagation();
+        if (communityForm.dataset.jvBusy === '1') return;
+        communityForm.dataset.jvBusy = '1';
+        const node = document.querySelector('[data-upload-message]');
+        const button = communityForm.querySelector('button[type="submit"]');
+        if (button) { button.disabled = true; button.textContent = 'Optimising & uploading…'; }
+        try {
+          const db = await ensureClient(); if (!db) throw new Error('Backend unavailable.');
+          const { user, profile } = await currentUserAndProfile(db); if (!user) throw new Error('Please sign in again.');
+          const file = communityForm.elements.photo?.files?.[0]; if (!file) throw new Error('Choose a photograph first.');
+          const pair = await uploadPhotoPair(db, user.id, file, 'submission');
+          const f = communityForm.elements;
+          const payload = {
+            image_url: pair.imageUrl,
+            thumbnail_url: pair.thumbnailUrl,
+            registration: f.registration.value.trim() || 'Unknown',
+            aircraft_type: f.aircraft_type.value.trim() || 'Unknown',
+            airline: f.airline.value.trim() || 'Unknown',
+            airport: f.airport.value.trim() || 'Unknown',
+            taken_at: f.taken_at.value || null,
+            caption: f.caption.value.trim(),
+            alt_text: f.alt_text.value.trim(),
+            ratio: pair.ratio
+          };
+          const r = await db.from('photos').insert(payload).select().single();
+          if (r.error) throw r.error;
+          invalidateContent();
+          showPipelineMessage(node, profile?.is_crew ? 'Published to the archive.' : 'Submitted for review.', true);
+          setTimeout(() => location.reload(), 650);
+        } catch (err) {
+          showPipelineMessage(node, err.message || 'Upload failed.');
+          communityForm.dataset.jvBusy = '0';
+          if (button) { button.disabled = false; button.textContent = 'Submit for review'; }
+        }
+      }, true);
+    }
+
+    const crewForm = document.querySelector('[data-upload-form]');
+    if (crewForm && !crewForm.dataset.jvImagePipeline) {
+      crewForm.dataset.jvImagePipeline = '1';
+      crewForm.addEventListener('submit', async e => {
+        e.preventDefault(); e.stopImmediatePropagation();
+        if (crewForm.dataset.jvBusy === '1') return;
+        crewForm.dataset.jvBusy = '1';
+        const errorNode = document.querySelector('[data-upload-error]');
+        const successNode = document.querySelector('[data-upload-success]');
+        const button = crewForm.querySelector('button[type="submit"]');
+        if (button) { button.disabled = true; button.textContent = 'Optimising full + thumbnail…'; }
+        try {
+          const db = await ensureClient(); if (!db) throw new Error('Backend unavailable.');
+          const { user, profile } = await currentUserAndProfile(db); if (!user || !profile?.is_crew) throw new Error('Crew session required.');
+          const file = crewForm.querySelector('[data-upload-file]')?.files?.[0]; if (!file) throw new Error('Choose a photograph first.');
+          const pair = await uploadPhotoPair(db, user.id, file, 'crew');
+          const f = new FormData(crewForm);
+          const payload = {
+            image_url: pair.imageUrl,
+            thumbnail_url: pair.thumbnailUrl,
+            registration: String(f.get('registration') || 'Unknown').trim() || 'Unknown',
+            aircraft_type: String(f.get('aircraft_type') || 'Unknown').trim() || 'Unknown',
+            airline: String(f.get('airline') || 'Unknown').trim() || 'Unknown',
+            airport: String(f.get('airport') || 'Unknown').trim().toUpperCase() || 'Unknown',
+            taken_at: f.get('taken_at') || null,
+            caption: String(f.get('caption') || '').trim(),
+            alt_text: String(f.get('alt_text') || '').trim(),
+            ratio: pair.ratio
+          };
+          const r = await db.from('photos').insert(payload).select().single();
+          if (r.error) throw r.error;
+          invalidateContent();
+          showPipelineMessage(successNode, `Published as ${profile.display_name}'s photograph.`, true);
+          setTimeout(() => location.reload(), 650);
+        } catch (err) {
+          showPipelineMessage(errorNode, err.message || 'Upload failed.');
+          crewForm.dataset.jvBusy = '0';
+          if (button) { button.disabled = false; button.textContent = 'Publish photograph'; }
+        }
+      }, true);
+    }
+  }
+
+  function upgradeLightboxToFull() {
+    const dialog = document.querySelector('[data-lightbox]');
+    if (!dialog?.open) return;
+    const id = new URLSearchParams(location.search).get('photo');
+    if (!id) return;
+    const full = fullImageById.get(String(id));
+    const img = dialog.querySelector('.lightbox__media img');
+    if (!full || !img) return;
+    const absolute = new URL(full, location.href).href;
+    if (img.src !== absolute) img.src = full;
+  }
+
+  function installLightboxUpgrade() {
+    const root = document.querySelector('[data-lightbox-inner]');
+    if (!root || root.dataset.jvFullUpgrade) return;
+    root.dataset.jvFullUpgrade = '1';
+    const observer = new MutationObserver(() => requestAnimationFrame(upgradeLightboxToFull));
+    observer.observe(root, { childList: true, subtree: true });
+    document.querySelector('[data-lightbox]')?.addEventListener('click', () => setTimeout(upgradeLightboxToFull, 0));
+  }
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  async function migrateExistingThumbnails() {
+    if (!document.querySelector('[data-admin-app]')) return;
+    const db = await ensureClient(); if (!db) return;
+    const { user, profile } = await currentUserAndProfile(db);
+    if (!user || !profile?.is_manager) return;
+
+    const result = await db.from('photos')
+      .select('id,image_url,thumbnail_url,registration,created_at')
+      .neq('registration', META_PROFILE)
+      .neq('registration', META_POST)
+      .order('created_at', { ascending: true });
+    if (result.error) return console.warn('Jetvault thumbnail migration query failed', result.error.message);
+
+    // Filtering client-side is deliberately boring/reliable: empty string and NULL both count as missing.
+    const rows = (result.data || []).filter(row => row.image_url && !String(row.thumbnail_url || '').trim());
+    if (!rows.length) return;
+    console.info(`Jetvault Image Pipeline: ${rows.length} archive thumbnails left to generate.`);
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      try {
+        const response = await fetch(new URL(row.image_url, location.href).href, { cache: 'force-cache' });
+        if (!response.ok) throw new Error(`Image HTTP ${response.status}`);
+        const source = await response.blob();
+        const thumb = await makeWebpVariant(source, { maxSide: 1100, quality: .72 });
+        const path = `${user.id}/migrated-thumb-${row.id}.webp`;
+        const thumbnailUrl = await uploadPrepared(db, user.id, path, thumb.blob);
+        const updated = await db.from('photos').update({ thumbnail_url: thumbnailUrl }).eq('id', row.id);
+        if (updated.error) throw updated.error;
+        console.info(`Jetvault thumbnail ${i + 1}/${rows.length}`);
+      } catch (err) {
+        console.warn(`Jetvault thumbnail skipped for ${row.id}:`, err.message || err);
+      }
+      // Keep Safari responsive while the one-time archive migration runs.
+      await sleep(180);
+    }
+    invalidateContent();
+    console.info('Jetvault Image Pipeline: archive thumbnail migration finished.');
+  }
+
+  function bootImagePipeline() {
+    installUploadInterceptors();
+    installLightboxUpgrade();
+    // Delay the one-time manager migration so normal Studio loading wins first.
+    setTimeout(() => migrateExistingThumbnails().catch(() => {}), 2200);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootImagePipeline, { once: true });
+  else bootImagePipeline();
+
+  window.ScottishAeroBackend = { configured, client: buildClient(), ensureClient, getRows, getProfiles, getData, getPhotos, getPosts, getPhotographers, getCurrentProfile, getProfileByKey, invalidateContent, trackVisit, trackPhotoView, slugify, formatDate, dbPhotoToSite, rowToPost, rowToProfileMeta, profileToSite, META_PROFILE, META_POST };
 })();

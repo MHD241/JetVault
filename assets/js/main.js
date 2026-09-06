@@ -1,68 +1,95 @@
 (() => {
-  const JV=()=>window.JetVault;
-  const page=document.body.dataset.page || '';
-  const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-  const nav=[
-    ['home','index.html','Home'],['gallery','gallery.html','Explore'],['airports','airports.html','Airports'],
-    ['photographers','photographers.html','Creators'],['games','games.html','Games'],['missions','missions.html','Missions']
-  ];
+  const body = document.body;
+  const header = document.querySelector('.site-header');
+  const navToggle = document.querySelector('[data-nav-toggle]');
+  const nav = document.querySelector('[data-nav]');
+  const progress = document.querySelector('[data-scroll-progress]');
+  const heroMedia = document.querySelector('[data-hero-media]');
+  const glow = document.querySelector('[data-cursor-glow]');
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const finePointer = matchMedia('(pointer:fine)');
 
-  function shell(){
-    const h=document.querySelector('[data-site-header]');
-    if(h) h.innerHTML=`<div class="site-header"><div class="container nav">
-      <a class="brand" href="index.html"><span class="brand-mark">✈</span><span>JETVAULT <small>AVIATION ARCHIVE</small></span></a>
-      <button class="nav-toggle" type="button" data-nav-toggle>Menu</button>
-      <nav class="nav-links" data-nav-links>${nav.map(([k,u,t])=>`<a class="${page===k?'is-active':''}" href="${u}">${t}</a>`).join('')}</nav>
-      <a class="account-link" data-account-link href="account.html">Account</a>
-    </div></div>`;
-    const f=document.querySelector('[data-site-footer]');
-    if(f) f.innerHTML=`<footer class="site-footer"><div class="container footer-grid">
-      <div><b>JetVault</b><div>Independent aviation photography archive and community.</div></div>
-      <div class="footer-links"><a href="about.html">About</a><a href="rules.html">Rules</a><a href="credits.html">Credits</a><a href="aerocoins.html">AeroCoins</a><a href="passport.html">Passport</a></div>
-    </div></footer>`;
-    h?.querySelector('[data-nav-toggle]')?.addEventListener('click',()=>h.querySelector('[data-nav-links]')?.classList.toggle('is-open'));
+  document.querySelectorAll('[data-year]').forEach(el => el.textContent = new Date().getFullYear());
+
+  navToggle?.addEventListener('click', () => {
+    const open = !body.classList.contains('nav-open');
+    body.classList.toggle('nav-open', open);
+    navToggle.setAttribute('aria-expanded', String(open));
+  });
+  nav?.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    body.classList.remove('nav-open');
+    navToggle?.setAttribute('aria-expanded', 'false');
+  }));
+
+  const observer = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      entry.target.classList.add('is-visible');
+      observer.unobserve(entry.target);
+    }
+  }, { threshold: .08, rootMargin: '0px 0px -3% 0px' }) : null;
+
+  document.querySelectorAll('[data-reveal]').forEach(el => {
+    if (observer) observer.observe(el); else el.classList.add('is-visible');
+  });
+
+  let ticking = false;
+  function updateFrame() {
+    ticking = false;
+    const y = scrollY;
+    header?.classList.toggle('is-scrolled', y > 24);
+    if (progress) {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      progress.style.transform = `scaleX(${max > 0 ? y / max : 0})`;
+    }
+    if (heroMedia && !reduceMotion.matches) {
+      heroMedia.style.transform = `scale(${1.025 + Math.min(y / 26000, .035)}) translate3d(0,${Math.min(y * .038, 20)}px,0)`;
+    }
+  }
+  function requestFrame() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(updateFrame);
+  }
+  updateFrame();
+  addEventListener('scroll', requestFrame, { passive: true });
+  addEventListener('resize', requestFrame, { passive: true });
+
+  if (glow && finePointer.matches && !reduceMotion.matches) {
+    let pointerTicking = false;
+    let px = 0, py = 0;
+    addEventListener('pointermove', e => {
+      px = e.clientX; py = e.clientY;
+      if (pointerTicking) return;
+      pointerTicking = true;
+      requestAnimationFrame(() => {
+        glow.style.setProperty('--x', `${px}px`);
+        glow.style.setProperty('--y', `${py}px`);
+        glow.classList.add('is-active');
+        pointerTicking = false;
+      });
+    }, { passive: true });
   }
 
-  window.JVUI={
-    toast(text,kind=''){let n=document.querySelector('[data-global-toast]');if(!n){n=document.createElement('div');n.dataset.globalToast='';n.style.cssText='position:fixed;right:16px;bottom:16px;z-index:100;background:#0d1924;border:1px solid #294156;color:white;padding:12px 14px;border-radius:12px;box-shadow:0 15px 40px #0008;max-width:340px';document.body.append(n)}n.textContent=text;n.style.display='block';clearTimeout(n._t);n._t=setTimeout(()=>n.style.display='none',3200)},
-    photoCard(p){return `<article class="photo-card"><button class="photo-card__open" data-open-photo="${esc(p.id)}" type="button"><div class="photo-card__image"><img src="${esc(p.thumbUrl||p.fullUrl)}" alt="${esc(p.alt)}" loading="lazy" decoding="async"></div><span class="photo-card__badge">${esc(p.airport)}</span><div class="photo-card__body"><small>${esc(p.airline)}</small><strong>${esc(p.reg)}</strong><span>${esc(p.aircraft)} · ${esc(p.photographerName)}</span></div></button></article>`}
-  };
-
-  async function authLabel(){
-    try{
-      const [u,p]=await Promise.all([JV().currentUser(),JV().currentProfile()]);
-      const a=document.querySelector('[data-account-link]');
-      if(a&&u) a.textContent=p?.display_name || 'My account';
-    }catch(_){}
+  if (finePointer.matches && !reduceMotion.matches) {
+    document.querySelectorAll('[data-tilt]').forEach(card => {
+      let tiltTicking = false, x = 0, y = 0;
+      card.addEventListener('pointermove', e => {
+        const r = card.getBoundingClientRect();
+        x = (e.clientX - r.left) / r.width - .5;
+        y = (e.clientY - r.top) / r.height - .5;
+        if (tiltTicking) return;
+        tiltTicking = true;
+        requestAnimationFrame(() => {
+          card.style.transform = `perspective(900px) rotateX(${-y * 2}deg) rotateY(${x * 2.5}deg) translate3d(0,-3px,0)`;
+          tiltTicking = false;
+        });
+      }, { passive: true });
+      card.addEventListener('pointerleave', () => card.style.transform = '');
+    });
   }
 
-  async function home(){
-    if(page!=='home') return;
-    try{
-      const [s,featured,recent]=await Promise.all([
-        JV().stats(),JV().listPhotos({featured:true,pageSize:6}),JV().listPhotos({pageSize:6})
-      ]);
-      document.querySelector('[data-stat-photos]').textContent=s.photos.toLocaleString();
-      document.querySelector('[data-stat-members]').textContent=s.members.toLocaleString();
-      document.querySelector('[data-stat-crew]').textContent=s.crew.toLocaleString();
-      const use=featured.items.length?featured.items:recent.items;
-      const grid=document.querySelector('[data-home-photos]'); if(grid) grid.innerHTML=use.map(window.JVUI.photoCard).join('');
-      grid?.addEventListener('click',e=>{const b=e.target.closest('[data-open-photo]');if(b)location.href=`gallery.html?photo=${encodeURIComponent(b.dataset.openPhoto)}`});
-    }catch(e){console.warn(e)}
-  }
-
-  async function discover(){
-    if(page!=='discover') return;
-    try{
-      const r=await JV().listPhotos({pageSize:36});
-      const items=[...r.items].sort(()=>Math.random()-.5).slice(0,12);
-      const grid=document.querySelector('[data-discover-grid]');
-      grid.innerHTML=items.map(window.JVUI.photoCard).join('');
-      grid.addEventListener('click',e=>{const b=e.target.closest('[data-open-photo]');if(b)location.href=`gallery.html?photo=${encodeURIComponent(b.dataset.openPhoto)}`});
-    }catch(e){document.querySelector('[data-discover-grid]').innerHTML='<div class="empty">Could not load Discover.</div>'}
-  }
-
-  shell();
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>{authLabel();home();discover()},{once:true});
-  else {authLabel();home();discover()}
+  // Content is already visible underneath; this is a quick polish, not a blocking intro.
+  requestAnimationFrame(() => body.classList.add('page-ready'));
+  window.ScottishAeroBackend?.trackVisit();
 })();

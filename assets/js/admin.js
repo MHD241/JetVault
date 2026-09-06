@@ -1,78 +1,493 @@
 (() => {
-  const J=window.JetVault, UI=window.JVUI; if(!J)return;
-  const root=document.querySelector('[data-admin-root]'); if(!root)return;
-  const status=(t,k='')=>{const n=document.querySelector('[data-admin-status]');n.textContent=t;n.className=`status ${k}`};
+  const backend = window.ScottishAeroBackend;
+  const accountEmails = {
+    mohammed: 'mohammed@scottish.aero',
+    ellis: 'ellis@scottish.aero',
+    arran: 'arran@scottish.aero'
+  };
+  const $ = selector => document.querySelector(selector);
+  const $$ = selector => [...document.querySelectorAll(selector)];
+  const esc = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
 
-  async function requireAccess(){
-    const [u,p]=await Promise.all([J.currentUser(),J.currentProfile()]);
-    if(!u||!p||( !p.is_manager && !p.is_crew)){root.innerHTML='<div class="panel"><h2>Manager access required</h2><p>Sign in with a JetVault crew account.</p><a class="solid-button" href="account.html">Sign in</a></div>';return null}
-    document.querySelector('[data-manager-name]').textContent=p.display_name;
-    return {u,p};
+  const loginCard = $('[data-login-card]');
+  const loginForm = $('[data-login-form]');
+  const loginError = $('[data-login-error]');
+  const adminApp = $('[data-admin-app]');
+  const signOutButton = $('[data-sign-out]');
+  const backendStatus = $('[data-backend-status]');
+  const backendWarning = $('[data-backend-warning]');
+  const profileName = $('[data-profile-name]');
+  const adminAvatar = $('[data-admin-avatar]');
+  const overviewName = $('[data-overview-profile-name]');
+  const overviewBio = $('[data-overview-bio]');
+
+  const uploadForm = $('[data-upload-form]');
+  const uploadFile = $('[data-upload-file]');
+  const uploadPreview = $('[data-upload-preview]');
+  const uploadError = $('[data-upload-error]');
+  const uploadSuccess = $('[data-upload-success]');
+
+  const postForm = $('[data-post-form]');
+  const postFile = $('[data-post-file]');
+  const postPreview = $('[data-post-preview]');
+  const postError = $('[data-post-error]');
+  const postSuccess = $('[data-post-success]');
+  const postList = $('[data-admin-post-list]');
+  const postCount = $('[data-post-count]');
+
+  const profileForm = $('[data-profile-form]');
+  const avatarFile = $('[data-avatar-file]');
+  const profileError = $('[data-profile-error]');
+  const profileSuccess = $('[data-profile-success]');
+  const bioCount = $('[data-bio-count]');
+  const previewAvatar = $('[data-preview-avatar]');
+  const previewName = $('[data-preview-name]');
+  const previewBio = $('[data-preview-bio]');
+  const previewCover = $('[data-preview-cover]');
+
+  const photoList = $('[data-admin-photo-list]');
+  const photoCount = $('[data-photo-count]');
+  const editDialog = $('[data-edit-dialog]');
+  const editForm = $('[data-edit-form]');
+  const editError = $('[data-edit-error]');
+  const postEditDialog = $('[data-post-edit-dialog]');
+  const postEditForm = $('[data-post-edit-form]');
+  const postEditError = $('[data-post-edit-error]');
+
+  const passwordForm = $('[data-password-form]');
+  const passwordMessage = $('[data-password-message]');
+
+  let client = null;
+  let sessionUser = null;
+  let profile = null;
+  let rows = [];
+  let adminPhotos = [];
+  let adminPosts = [];
+  let profileRecord = null;
+  let uploadRatio = 'standard';
+
+  function clearMessage(node) { if (node) { node.textContent = ''; node.classList.remove('show'); } }
+  function showMessage(node, message, success = false) {
+    if (!node) return;
+    node.textContent = message;
+    node.classList.add('show');
+    node.classList.toggle('form-success', success);
+    node.classList.toggle('form-error', !success);
   }
 
-  async function pending(){
-    const db=await J.ensureClient();
-    const {data,error}=await db.from('photos').select('id,owner_id,photographer_name,image_url,thumbnail_url,registration,aircraft_type,airline,airport,caption,created_at,status').eq('status','pending').order('created_at',{ascending:true}).limit(100);
-    if(error)throw error;
-    const n=document.querySelector('[data-pending-list]');
-    n.innerHTML=(data||[]).length?(data||[]).map(x=>`<article class="admin-item" data-row="${x.id}"><img src="${x.thumbnail_url||x.image_url}" alt=""><div><b>${x.registration} · ${x.aircraft_type}</b><div>${x.airline} · ${x.airport}</div><small>${x.photographer_name}</small></div><div class="admin-actions"><button class="mini-button success" data-approve="${x.id}">Approve</button><button class="mini-button danger" data-reject="${x.id}">Reject</button></div></article>`).join(''):'<div class="empty">No pending photographs.</div>';
+  function setBackendState() {
+    const live = Boolean(backend?.configured);
+    backendStatus?.classList.toggle('is-live', live);
+    if (backendStatus) backendStatus.textContent = live ? 'Backend live' : 'Backend offline';
+    if (backendWarning) backendWarning.hidden = live;
+  }
+  setBackendState();
+
+  async function connect() {
+    if (!backend?.configured) return null;
+    client = await backend.ensureClient();
+    return client;
   }
 
-  async function moderate(id,next){
-    const db=await J.ensureClient(),u=await J.currentUser();
-    const patch={status:next,moderation_note:next==='rejected'?'Rejected by JetVault moderation.':'',updated_at:new Date().toISOString()};
-    if(next==='approved'){patch.approved_at=new Date().toISOString();patch.approved_by=u.id}
-    const {error}=await db.from('photos').update(patch).eq('id',id);if(error)throw error;await pending()
+  function initials(name) {
+    return String(name || 'SA').split(/\s+/).filter(Boolean).map(x => x[0]).slice(0, 2).join('').toUpperCase();
   }
 
-  document.querySelector('[data-pending-list]')?.addEventListener('click',async e=>{const a=e.target.closest('[data-approve]'),r=e.target.closest('[data-reject]');try{if(a)await moderate(a.dataset.approve,'approved');if(r)await moderate(r.dataset.reject,'rejected')}catch(err){status(err.message,'bad')}});
+  function avatarMarkup(src, name, fallbackInitials = '') {
+    return src ? `<img src="${esc(src)}" alt="${esc(name)} profile photo">` : `<span>${esc(fallbackInitials || initials(name))}</span>`;
+  }
 
-  document.querySelector('[data-admin-upload]')?.addEventListener('submit',async e=>{
-    e.preventDefault();const form=e.currentTarget,f=new FormData(form),db=await J.ensureClient(),u=await J.currentUser(),p=await J.currentProfile();
-    try{
-      status('Optimising full image + thumbnail…');const pair=await J.uploadPhotoPair(f.get('image'),u.id,'crew');
-      const {error}=await db.from('photos').insert({owner_id:u.id,photographer_name:p.display_name,image_url:pair.imageUrl,thumbnail_url:pair.thumbnailUrl,registration:f.get('registration')||'Unknown',aircraft_type:f.get('aircraft_type')||'Unknown',airline:f.get('airline')||'Unknown',airport:f.get('airport')||'Unknown',taken_at:f.get('taken_at')||null,caption:f.get('caption')||'',alt_text:`${f.get('airline')||'Aircraft'} ${f.get('aircraft_type')||''}`.trim(),ratio:pair.ratio,status:'approved',approved_at:new Date().toISOString(),approved_by:u.id});
-      if(error)throw error;status('Crew photograph published.','ok');form.reset()
-    }catch(err){status(err.message,'bad')}
+  function canEdit(row) {
+    if (!row || !profile || !sessionUser) return false;
+    return Boolean(profile.is_manager || row.owner_id === sessionUser.id || row.photographer_name === profile.display_name);
+  }
+
+  async function getProfile(userId) {
+    const result = await client.from('profiles').select('*').eq('id', userId).single();
+    if (result.error) throw result.error;
+    return result.data;
+  }
+
+  function splitRows() {
+    const p = backend.META_PROFILE;
+    const post = backend.META_POST;
+    adminPhotos = rows.filter(row => row.registration !== p && row.registration !== post);
+    adminPosts = rows.filter(row => row.registration === post);
+    const mine = rows.filter(row => row.registration === p && row.photographer_name === profile?.display_name);
+    profileRecord = mine[0] || null;
+  }
+
+  async function loadRows() {
+    const result = await client.from('photos').select('*').order('created_at', { ascending: false });
+    if (result.error) throw result.error;
+    rows = result.data || [];
+    splitRows();
+    renderArchive();
+    renderPosts();
+    renderProfileEditor();
+  }
+
+  async function loadStats() {
+    const [active, views] = await Promise.all([
+      client.rpc('active_user_summary'),
+      client.from('photo_views').select('id', { count: 'exact', head: true })
+    ]);
+    const row = Array.isArray(active.data) ? active.data[0] : active.data;
+    $('[data-stat-visits]').textContent = active.error ? '—' : (row?.active_30d ?? 0);
+    $('[data-stat-week]').textContent = active.error ? '—' : (row?.active_7d ?? 0);
+    $('[data-stat-views]').textContent = views.count ?? '—';
+    $('[data-stat-photos]').textContent = adminPhotos.length;
+  }
+
+  function renderArchive() {
+    if (!photoList) return;
+    const visible = adminPhotos.filter(canEdit);
+    photoCount.textContent = `${visible.length} photograph${visible.length === 1 ? '' : 's'}`;
+    photoList.innerHTML = visible.length ? visible.map(photo => `
+      <article class="admin-photo">
+        <img src="${esc(photo.image_url)}" alt="${esc(photo.alt_text || photo.airline || 'Aircraft')}">
+        <div><h3>${esc(photo.registration || 'Unknown')} · ${esc(photo.aircraft_type || 'Unknown')}</h3><p>${esc(photo.airline || 'Unknown')} · ${esc(photo.airport || 'Unknown')} · ${esc(photo.photographer_name || '')}</p></div>
+        <div class="admin-photo__actions"><button class="mini-button" type="button" data-edit-photo="${esc(photo.id)}">Edit</button><button class="mini-button danger" type="button" data-delete-photo="${esc(photo.id)}">Delete</button></div>
+      </article>`).join('') : '<div class="admin-empty">No photographs available to this account yet.</div>';
+    $$('[data-edit-photo]').forEach(btn => btn.addEventListener('click', () => openEditor(btn.dataset.editPhoto)));
+    $$('[data-delete-photo]').forEach(btn => btn.addEventListener('click', () => deleteRecord(btn.dataset.deletePhoto, 'photograph')));
+  }
+
+  function renderPosts() {
+    if (!postList) return;
+    const mine = adminPosts.filter(canEdit);
+    postCount.textContent = `${mine.length} post${mine.length === 1 ? '' : 's'}`;
+    postList.innerHTML = mine.length ? mine.map(row => `
+      <article class="admin-post">
+        ${row.image_url ? `<img src="${esc(row.image_url)}" alt="">` : '<div class="admin-post__signal">SA</div>'}
+        <div><span>${esc(backend.formatDate(row.created_at))} · ${esc(row.photographer_name)}</span><h3>${esc(row.aircraft_type || 'Crew update')}</h3><p>${esc(row.caption || '')}</p></div>
+        <div class="admin-photo__actions"><button class="mini-button" type="button" data-edit-post="${esc(row.id)}">Edit</button><button class="mini-button danger" type="button" data-delete-post="${esc(row.id)}">Delete</button></div>
+      </article>`).join('') : '<div class="admin-empty">No posts yet. Publish the first update from the form beside this list.</div>';
+    $$('[data-edit-post]').forEach(btn => btn.addEventListener('click', () => openPostEditor(btn.dataset.editPost)));
+    $$('[data-delete-post]').forEach(btn => btn.addEventListener('click', () => deleteRecord(btn.dataset.deletePost, 'post')));
+  }
+
+  function renderProfileEditor() {
+    if (!profile) return;
+    const localPerson = window.SCOTTISH_AERO?.photographers?.find(p => p.name === profile.display_name);
+    const bio = profileRecord?.caption || localPerson?.bio || 'Scottish.aero photographer.';
+    const avatar = profileRecord?.image_url || localPerson?.avatar || '';
+    const myPhoto = adminPhotos.find(row => row.photographer_name === profile.display_name)?.image_url || '';
+    if (profileForm) profileForm.elements.bio.value = bio;
+    if (bioCount) bioCount.textContent = bio.length;
+    if (overviewName) overviewName.textContent = profile.display_name;
+    if (overviewBio) overviewBio.textContent = bio;
+    if (previewName) previewName.textContent = profile.display_name;
+    if (previewBio) previewBio.textContent = bio;
+    if (previewAvatar) previewAvatar.innerHTML = avatarMarkup(avatar, profile.display_name);
+    if (adminAvatar) adminAvatar.innerHTML = avatarMarkup(avatar, profile.display_name);
+    if (previewCover) previewCover.innerHTML = myPhoto ? `<img src="${esc(myPhoto)}" alt="">` : '';
+  }
+
+  function showStudioTab(name) {
+    $$('[data-studio-tab]').forEach(btn => btn.classList.toggle('is-active', btn.dataset.studioTab === name));
+    $$('[data-studio-panel]').forEach(panel => { panel.hidden = panel.dataset.studioPanel !== name; });
+    if (name !== 'overview') scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  $$('[data-studio-tab]').forEach(btn => btn.addEventListener('click', () => showStudioTab(btn.dataset.studioTab)));
+  $$('[data-jump-tab]').forEach(btn => btn.addEventListener('click', () => showStudioTab(btn.dataset.jumpTab)));
+
+  async function enterDashboard(user) {
+    sessionUser = user;
+    try { profile = await getProfile(user.id); }
+    catch (error) {
+      showMessage(loginError, `Profile error: ${error.message}`);
+      await client.auth.signOut();
+      return;
+    }
+    loginCard.hidden = true;
+    adminApp.hidden = false;
+    profileName.textContent = profile.display_name.split(' ')[0];
+    $('[data-profile-role]').textContent = profile.is_manager ? 'Site manager · Photographer' : 'Scottish.aero photographer';
+    await loadRows();
+    await loadStats();
+  }
+
+  async function leaveDashboard() {
+    sessionUser = null; profile = null; rows = []; adminPhotos = []; adminPosts = []; profileRecord = null;
+    adminApp.hidden = true; loginCard.hidden = false;
+    loginForm?.reset();
+  }
+
+  loginForm?.addEventListener('submit', async event => {
+    event.preventDefault(); clearMessage(loginError);
+    if (!client) client = await connect();
+    if (!client) return showMessage(loginError, 'The Scottish.aero backend is not connected on this deployment.');
+    const form = new FormData(loginForm);
+    const username = String(form.get('username') || '').trim().toLowerCase();
+    const password = String(form.get('password') || '');
+    const email = accountEmails[username];
+    if (!email) return showMessage(loginError, 'Unknown Scottish.aero account.');
+    const submit = loginForm.querySelector('button[type="submit"]');
+    submit.disabled = true; submit.textContent = 'Signing in…';
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    submit.disabled = false; submit.textContent = 'Enter studio';
+    if (error) return showMessage(loginError, error.message);
+    await enterDashboard(data.user);
   });
 
-  async function migration(){
-    const db=await J.ensureClient(),u=await J.currentUser(),p=await J.currentProfile(); if(!p?.is_manager)return;
-    const {data,error}=await db.from('photos').select('id,image_url,thumbnail_url,registration,status').eq('status','approved').not('registration','in','("__SA_PROFILE__","__SA_POST__")').limit(1000);
-    if(error)throw error;
-    const rows=(data||[]).filter(x=>!String(x.thumbnail_url||'').trim());
-    const meter=document.querySelector('[data-migration-meter]'), copy=document.querySelector('[data-migration-copy]');
-    if(copy)copy.textContent=rows.length?`${rows.length} legacy thumbnails remaining.`:'Archive thumbnails complete.';
-    if(!rows.length)return;
-    let done=0,failed=0;
-    for(const row of rows){
-      try{
-        if(/^assets\/images\/photos\/arran-.*\.jpg$/i.test(row.image_url||'')){
-          const candidate=row.image_url.replace(/\.jpg$/i,'.webp');
-          const {error:e}=await db.from('photos').update({thumbnail_url:candidate}).eq('id',row.id); if(e)throw e;
-        }else{
-          const source=new URL(row.image_url,location.href).href;
-          const res=await fetch(source,{cache:'force-cache'});if(!res.ok)throw new Error(`HTTP ${res.status}`);
-          const blob=await res.blob(),thumb=await J.makeThumbnailBlob(blob,960);
-          const path=`${u.id}/migration/thumb-${row.id}.webp`;
-          const up=await db.storage.from('photos').upload(path,thumb,{contentType:'image/webp',cacheControl:'31536000',upsert:true});if(up.error)throw up.error;
-          const url=db.storage.from('photos').getPublicUrl(path).data.publicUrl;
-          const save=await db.from('photos').update({thumbnail_url:url}).eq('id',row.id);if(save.error)throw save.error;
-        }
-        done++;
-      }catch(err){failed++;console.warn('Thumbnail migration skipped',row.id,err)}
-      if(meter)meter.style.width=`${Math.round(((done+failed)/rows.length)*100)}%`;
-      if(copy)copy.textContent=`Migrating legacy archive: ${done} done · ${failed} skipped · ${rows.length-done-failed} remaining`;
-      await new Promise(r=>setTimeout(r,90));
+  signOutButton?.addEventListener('click', async () => {
+    if (client) await client.auth.signOut();
+    await leaveDashboard();
+  });
+
+  function previewFile(input, preview) {
+    clearMessage(uploadError); clearMessage(uploadSuccess);
+    const file = input?.files?.[0];
+    if (!file || !preview) return;
+    const url = URL.createObjectURL(file);
+    preview.innerHTML = `<img src="${url}" alt="Upload preview">`;
+    preview.classList.add('show');
+    const img = new Image();
+    img.onload = () => {
+      if (input === uploadFile) {
+        const ratio = img.width / img.height;
+        uploadRatio = ratio > 1.55 ? 'wide' : ratio < .9 ? 'tall' : 'standard';
+      }
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  }
+  uploadFile?.addEventListener('change', () => previewFile(uploadFile, uploadPreview));
+  postFile?.addEventListener('change', () => previewFile(postFile, postPreview));
+
+  async function optimiseUpload(file, { maxSide = 2200, quality = 0.82, square = false } = {}) {
+    try {
+      const bitmap = await createImageBitmap(file);
+      let sx = 0, sy = 0, sw = bitmap.width, sh = bitmap.height;
+      if (square) {
+        const side = Math.min(bitmap.width, bitmap.height);
+        sx = Math.floor((bitmap.width - side) / 2); sy = Math.floor((bitmap.height - side) / 2); sw = sh = side;
+      }
+      const scale = Math.min(1, maxSide / Math.max(sw, sh));
+      const width = Math.max(1, Math.round(sw * scale));
+      const height = Math.max(1, Math.round(sh * scale));
+      const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d', { alpha: false });
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(bitmap, sx, sy, sw, sh, 0, 0, width, height); bitmap.close?.();
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
+      if (!blob) throw new Error('WebP conversion unavailable');
+      return { blob, type: 'image/webp', ext: 'webp' };
+    } catch (error) {
+      console.warn('Scottish.aero: using original upload.', error);
+      return { blob: file, type: file.type || 'image/jpeg', ext: (file.name.split('.').pop() || 'jpg').replace(/[^a-z0-9]/gi, '').toLowerCase() };
     }
-    if(copy)copy.textContent=`Migration pass complete: ${done} thumbnails created · ${failed} skipped. Reload Manager Studio to retry skipped images.`;
   }
 
-  async function boot(){
-    const access=await requireAccess();if(!access)return;
-    await pending();status('Manager Studio ready.','ok');
-    setTimeout(()=>migration().catch(e=>console.warn(e)),900);
-    document.querySelector('[data-run-migration]')?.addEventListener('click',()=>migration().catch(e=>status(e.message,'bad')));
+  async function uploadAsset(file, options = {}) {
+    if (!file) return '';
+    if (!file.type.startsWith('image/')) throw new Error('The selected file is not an image.');
+    if (file.size > 20 * 1024 * 1024) throw new Error('Please keep individual images below 20 MB.');
+    const optimised = await optimiseUpload(file, options);
+    const objectName = `${sessionUser.id}/${crypto.randomUUID()}.${optimised.ext}`;
+    const upload = await client.storage.from('photos').upload(objectName, optimised.blob, { cacheControl: '31536000', upsert: false, contentType: optimised.type });
+    if (upload.error) throw upload.error;
+    const { data } = client.storage.from('photos').getPublicUrl(objectName);
+    return data.publicUrl;
   }
-  boot().catch(e=>status(e.message,'bad'));
+
+  uploadForm?.addEventListener('submit', async event => {
+    event.preventDefault(); clearMessage(uploadError); clearMessage(uploadSuccess);
+    if (!client || !sessionUser) return;
+    const file = uploadFile.files?.[0];
+    if (!file) return showMessage(uploadError, 'Choose a photograph first.');
+    const form = new FormData(uploadForm);
+    const submit = uploadForm.querySelector('button[type="submit"]');
+    submit.disabled = true; submit.textContent = 'Optimising & uploading…';
+    let imageUrl = '';
+    try {
+      imageUrl = await uploadAsset(file, { maxSide: 2200, quality: 0.82 });
+      const payload = {
+        image_url: imageUrl,
+        registration: String(form.get('registration') || 'Unknown').trim() || 'Unknown',
+        aircraft_type: String(form.get('aircraft_type') || 'Unknown').trim() || 'Unknown',
+        airline: String(form.get('airline') || 'Unknown').trim() || 'Unknown',
+        airport: String(form.get('airport') || 'Unknown').trim().toUpperCase() || 'Unknown',
+        taken_at: form.get('taken_at') || null,
+        caption: String(form.get('caption') || '').trim(),
+        alt_text: String(form.get('alt_text') || '').trim(),
+        ratio: uploadRatio
+      };
+      const inserted = await client.from('photos').insert(payload).select().single();
+      if (inserted.error) throw inserted.error;
+      backend.invalidateContent();
+      uploadForm.reset(); uploadPreview.innerHTML = ''; uploadPreview.classList.remove('show'); uploadRatio = 'standard';
+      showMessage(uploadSuccess, `Published as ${profile.display_name}'s photograph.`, true);
+      await loadRows(); await loadStats();
+    } catch (error) {
+      showMessage(uploadError, error.message || 'Upload failed.');
+    } finally { submit.disabled = false; submit.textContent = 'Publish photograph'; }
+  });
+
+  postForm?.addEventListener('submit', async event => {
+    event.preventDefault(); clearMessage(postError); clearMessage(postSuccess);
+    const form = new FormData(postForm);
+    const title = String(form.get('title') || '').trim();
+    const body = String(form.get('body') || '').trim();
+    if (!title || !body) return showMessage(postError, 'Add a title and some text first.');
+    const submit = postForm.querySelector('button[type="submit"]');
+    submit.disabled = true; submit.textContent = 'Publishing…';
+    try {
+      const file = postFile?.files?.[0];
+      const imageUrl = file ? await uploadAsset(file, { maxSide: 1800, quality: 0.8 }) : '';
+      const result = await client.from('photos').insert({
+        image_url: imageUrl,
+        registration: backend.META_POST,
+        aircraft_type: title,
+        airline: 'Crew post',
+        airport: 'SCOTLAND',
+        caption: body,
+        alt_text: title,
+        ratio: 'standard',
+        featured: false,
+        sort_order: 9999
+      }).select().single();
+      if (result.error) throw result.error;
+      backend.invalidateContent();
+      postForm.reset(); postPreview.innerHTML = ''; postPreview.classList.remove('show');
+      showMessage(postSuccess, 'Post published to your profile.', true);
+      await loadRows();
+    } catch (error) { showMessage(postError, error.message || 'Post failed.'); }
+    finally { submit.disabled = false; submit.textContent = 'Publish post'; }
+  });
+
+  profileForm?.elements.bio?.addEventListener('input', event => {
+    const value = event.target.value;
+    bioCount.textContent = value.length;
+    previewBio.textContent = value || 'Your bio will appear here.';
+  });
+  avatarFile?.addEventListener('change', () => {
+    const file = avatarFile.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    previewAvatar.innerHTML = `<img src="${url}" alt="Profile preview">`;
+  });
+
+  profileForm?.addEventListener('submit', async event => {
+    event.preventDefault(); clearMessage(profileError); clearMessage(profileSuccess);
+    const form = new FormData(profileForm);
+    const bio = String(form.get('bio') || '').trim();
+    const submit = profileForm.querySelector('button[type="submit"]');
+    submit.disabled = true; submit.textContent = 'Updating…';
+    try {
+      const file = avatarFile?.files?.[0];
+      let avatar = profileRecord?.image_url || '';
+      if (file) avatar = await uploadAsset(file, { maxSide: 640, quality: 0.84, square: true });
+      const payload = {
+        image_url: avatar,
+        registration: backend.META_PROFILE,
+        aircraft_type: 'Photographer profile',
+        airline: 'Scottish.aero',
+        airport: 'SCOTLAND',
+        caption: bio,
+        alt_text: `${profile.display_name} profile photo`,
+        ratio: 'standard',
+        featured: false,
+        sort_order: 9998
+      };
+      let result;
+      if (profileRecord?.id) result = await client.from('photos').update(payload).eq('id', profileRecord.id).select().single();
+      else result = await client.from('photos').insert(payload).select().single();
+      if (result.error) throw result.error;
+      backend.invalidateContent();
+      showMessage(profileSuccess, 'Public profile updated.', true);
+      await loadRows();
+    } catch (error) { showMessage(profileError, error.message || 'Profile update failed.'); }
+    finally { submit.disabled = false; submit.textContent = 'Update profile'; }
+  });
+
+  function openEditor(id) {
+    const photo = adminPhotos.find(p => p.id === id);
+    if (!photo || !canEdit(photo)) return;
+    editForm.elements.id.value = photo.id;
+    editForm.elements.registration.value = photo.registration || 'Unknown';
+    editForm.elements.aircraft_type.value = photo.aircraft_type || 'Unknown';
+    editForm.elements.airline.value = photo.airline || 'Unknown';
+    editForm.elements.airport.value = photo.airport || 'Unknown';
+    editForm.elements.taken_at.value = photo.taken_at || '';
+    editForm.elements.caption.value = photo.caption || '';
+    editForm.elements.alt_text.value = photo.alt_text || '';
+    editForm.elements.featured.checked = Boolean(photo.featured);
+    clearMessage(editError); editDialog.showModal();
+  }
+
+  editForm?.addEventListener('submit', async event => {
+    event.preventDefault(); clearMessage(editError);
+    const form = new FormData(editForm); const id = String(form.get('id'));
+    const photo = adminPhotos.find(p => p.id === id);
+    if (!photo || !canEdit(photo)) return showMessage(editError, 'You cannot edit this photograph.');
+    const payload = {
+      registration: String(form.get('registration') || 'Unknown').trim() || 'Unknown',
+      aircraft_type: String(form.get('aircraft_type') || 'Unknown').trim() || 'Unknown',
+      airline: String(form.get('airline') || 'Unknown').trim() || 'Unknown',
+      airport: String(form.get('airport') || 'Unknown').trim().toUpperCase() || 'Unknown',
+      taken_at: form.get('taken_at') || null,
+      caption: String(form.get('caption') || '').trim(),
+      alt_text: String(form.get('alt_text') || '').trim(),
+      featured: form.get('featured') === 'on'
+    };
+    const result = await client.from('photos').update(payload).eq('id', id);
+    if (result.error) return showMessage(editError, result.error.message);
+    backend.invalidateContent(); editDialog.close(); await loadRows();
+  });
+  $$('[data-close-edit]').forEach(btn => btn.addEventListener('click', () => editDialog.close()));
+
+  function openPostEditor(id) {
+    const post = adminPosts.find(p => p.id === id);
+    if (!post || !canEdit(post)) return;
+    postEditForm.elements.id.value = post.id;
+    postEditForm.elements.title.value = post.aircraft_type || '';
+    postEditForm.elements.body.value = post.caption || '';
+    clearMessage(postEditError); postEditDialog.showModal();
+  }
+  postEditForm?.addEventListener('submit', async event => {
+    event.preventDefault(); clearMessage(postEditError);
+    const form = new FormData(postEditForm); const id = String(form.get('id'));
+    const row = adminPosts.find(p => p.id === id);
+    if (!row || !canEdit(row)) return showMessage(postEditError, 'You cannot edit this post.');
+    const result = await client.from('photos').update({ aircraft_type: String(form.get('title') || '').trim(), caption: String(form.get('body') || '').trim(), alt_text: String(form.get('title') || '').trim() }).eq('id', id);
+    if (result.error) return showMessage(postEditError, result.error.message);
+    backend.invalidateContent(); postEditDialog.close(); await loadRows();
+  });
+  $$('[data-close-post-edit]').forEach(btn => btn.addEventListener('click', () => postEditDialog.close()));
+
+  async function removeStorageImage(url) {
+    const marker = '/storage/v1/object/public/photos/';
+    if (!url?.includes(marker)) return;
+    const objectPath = decodeURIComponent(url.split(marker)[1]);
+    if (objectPath) await client.storage.from('photos').remove([objectPath]);
+  }
+
+  async function deleteRecord(id, label) {
+    const row = rows.find(r => r.id === id);
+    if (!row || !canEdit(row)) return;
+    if (!confirm(`Delete this ${label}? This cannot be undone.`)) return;
+    const result = await client.from('photos').delete().eq('id', id);
+    if (result.error) return alert(result.error.message);
+    await removeStorageImage(row.image_url);
+    backend.invalidateContent(); await loadRows(); await loadStats();
+  }
+
+  passwordForm?.addEventListener('submit', async event => {
+    event.preventDefault(); clearMessage(passwordMessage);
+    const form = new FormData(passwordForm); const password = String(form.get('new_password') || '');
+    if (password.length < 10) return showMessage(passwordMessage, 'Use at least 10 characters.');
+    const { error } = await client.auth.updateUser({ password });
+    if (error) return showMessage(passwordMessage, error.message);
+    passwordForm.reset(); showMessage(passwordMessage, 'Password changed.', true);
+  });
+
+  async function init() {
+    client = await connect();
+    if (!client) return;
+    const { data } = await client.auth.getSession();
+    if (data.session?.user) await enterDashboard(data.session.user);
+  }
+  init();
 })();
