@@ -1,12 +1,128 @@
 <!doctype html>
-<html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#071019"><title>Missions — JetVault</title>
-<meta name="description" content="JetVault aviation photography archive and community.">
-<link rel="icon" href="assets/images/ui/favicon.svg"><link rel="stylesheet" href="assets/css/styles-v7-2.css">
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script defer src="assets/js/config.js"></script><script defer src="assets/js/backend-v7.js"></script><script defer src="assets/js/main.js"></script>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#06090d">
+  <meta name="description" content="Scottish.aero Spotter XP — daily aviation photography missions, levels, streaks and achievements.">
+  <title>Mission Control — Scottish.aero</title>
+  <link rel="icon" href="assets/images/ui/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/styles-v7-2.css">
+  <link rel="stylesheet" href="assets/css/mobile-v7-3.css">
+  <link rel="stylesheet" href="assets/css/styles-v7-5.css">
+  <link rel="stylesheet" href="assets/css/styles-v8.css">
+</head>
+<body class="missions-page">
+<div class="page-transition"></div><div class="scroll-progress" data-scroll-progress></div><div class="cursor-glow" data-cursor-glow></div>
+
+<header class="site-header"><div class="header-inner">
+  <a class="brand" href="index.html"><span class="brand-mark"><svg viewBox="0 0 64 64"><path d="M8 36 27 32 39 18 43 19 37 31 54 32 58 35 54 38 37 39 43 51 39 52 27 40 8 38 4 41 2 39 6 35 2 31 4 29Z" fill="currentColor"/></svg></span><span>Scottish.aero</span></a>
+  <nav class="site-nav" data-nav><a href="discover.html">Discover</a><a href="gallery.html">Gallery</a><a href="photographers.html">Photographers</a><a href="games.html">Games</a><a href="missions.html" aria-current="page">Missions</a><a href="account.html">Community</a></nav>
+  <div class="header-action"><a class="pill-button" href="account.html">Your account <span>↗</span></a></div>
+  <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle><span></span></button>
+</div></header>
+
+<main class="page-main">
+  <section class="missions-hero">
+    <div class="missions-radar" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+    <div class="site-shell missions-hero__grid">
+      <div class="missions-hero__copy" data-reveal>
+        <span class="eyebrow">Scottish.aero V8 / Spotter XP</span>
+        <h1>MISSION<br><span>CONTROL.</span></h1>
+        <p>Three missions rotate automatically every day. Submit the right aviation frame, get it approved, collect XP and build a profile that shows what you have actually done.</p>
+        <div class="missions-hero__actions"><a class="solid-button" href="account.html">Submit a photograph ↗</a><a class="outline-button" href="#today">Today's missions ↓</a></div>
+      </div>
+      <div class="mission-profile-card" data-mission-profile>
+        <span>YOUR FLIGHTLINE</span>
+        <h2>Sign in to track XP.</h2>
+        <p>Your level, streak and completion status appear here.</p>
+        <a class="outline-button" href="account.html?mode=login">Sign in ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section missions-today" id="today">
+    <div class="site-shell">
+      <div class="section-heading section-heading--compact">
+        <div><span class="eyebrow">Daily rotation</span><h2>Today's three.</h2></div>
+        <p data-mission-date>Loading today’s Scottish.aero mission set…</p>
+      </div>
+      <div class="mission-grid" data-daily-missions>
+        <article class="mission-card is-loading"><span>01</span><h3>Loading…</h3></article>
+        <article class="mission-card is-loading"><span>02</span><h3>Loading…</h3></article>
+        <article class="mission-card is-loading"><span>03</span><h3>Loading…</h3></article>
+      </div>
+      <div class="daily-clear" data-daily-clear>
+        <span>DAILY CLEAR</span><b>Complete all three missions</b><em>+100 XP BONUS</em>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--soft">
+    <div class="site-shell missions-how">
+      <div>
+        <span class="eyebrow">How it works</span>
+        <h2>NO FARMING.<br><span>NO FAKE XP.</span></h2>
+      </div>
+      <div class="missions-how__steps">
+        <article><b>01</b><span><strong>Read today's mission</strong><small>Every day gets an Easy, Medium and Hard objective.</small></span></article>
+        <article><b>02</b><span><strong>Upload the matching photograph</strong><small>The submission date locks which day's missions it can complete.</small></span></article>
+        <article><b>03</b><span><strong>Crew moderation still applies</strong><small>Nothing earns XP just because it was uploaded.</small></span></article>
+        <article><b>04</b><span><strong>Approval awards XP automatically</strong><small>The database checks the metadata and records the completion server-side.</small></span></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section missions-levels">
+    <div class="site-shell">
+      <div class="section-heading section-heading--compact">
+        <div><span class="eyebrow">Progression</span><h2>XP changes your profile.</h2></div>
+        <p>XP is permanent. You do not spend it. Higher levels unlock increasingly distinctive profile treatment.</p>
+      </div>
+      <div class="level-roadmap" data-level-roadmap></div>
+    </div>
+  </section>
+
+  <section class="section section--soft">
+    <div class="site-shell">
+      <div class="section-heading section-heading--compact">
+        <div><span class="eyebrow">Badges with receipts</span><h2>Achievements.</h2></div>
+        <p>Some badges come from your archive itself — not simply from clicking around the website.</p>
+      </div>
+      <div class="achievement-catalog">
+        <article><span>01</span><b>FIRST FRAME</b><p>Your first approved photograph.</p></article>
+        <article><span>05</span><b>FLIGHTLINE FIVE</b><p>Five approved photographs.</p></article>
+        <article><span>10</span><b>DOUBLE DIGITS</b><p>Ten approved photographs.</p></article>
+        <article><span>APT</span><b>AIRPORT HOPPER</b><p>Approved frames from five airports.</p></article>
+        <article><span>WB</span><b>HEAVY METAL</b><p>Ten approved widebody photographs.</p></article>
+        <article><span>🔥</span><b>SEVEN DAYS UP</b><p>Build a seven-day mission streak.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section missions-log-section">
+    <div class="site-shell">
+      <div class="section-heading section-heading--compact">
+        <div><span class="eyebrow">Your XP ledger</span><h2>Recent rewards.</h2></div>
+        <p>Every XP award has a reason. No mystery numbers.</p>
+      </div>
+      <div class="xp-ledger" data-xp-ledger><div class="v8-panel-loading">Sign in to see your XP history.</div></div>
+    </div>
+  </section>
+
+  <section class="cta-band"><div class="site-shell cta-band__inner"><div><span class="eyebrow">Flightline ready?</span><h2>Complete today's mission.</h2></div><div class="cta-band__actions"><a class="solid-button" href="account.html">Submit a photo ↗</a><a class="outline-button" href="gallery.html">Open archive</a></div></div></section>
+</main>
+
+<footer class="site-footer"><div class="site-shell"><div class="footer-top"><div class="footer-brand"><a class="brand" href="index.html"><span>Scottish.aero</span></a><p>An aviation photography community born in Scotland.</p></div><div class="footer-col"><h3>Explore</h3><a href="discover.html">Discover</a><a href="gallery.html">Gallery</a><a href="missions.html">Missions</a></div><div class="footer-col"><h3>Community</h3><a href="account.html">Your account</a><a href="rules.html">Photo rules</a><a href="games.html">Games Lab</a></div></div><div class="footer-bottom"><span>© <span data-year></span> Scottish.aero</span><span>V8 · Spotter XP</span></div></div></footer>
+
+<script defer src="assets/js/config.js"></script>
+<script defer src="assets/js/data.js"></script>
+<script defer src="assets/js/backend-v7.js"></script>
+<script defer src="assets/js/auth-hotfix-v7-3-1.js"></script>
+<script defer src="assets/js/main.js"></script>
+<script defer src="assets/js/social-v7.js"></script>
+<script defer src="assets/js/shell-v7-2.js"></script>
+<script defer src="assets/js/mobile-v7-3.js"></script>
+<script defer src="assets/js/footer-credit-v7-5.js"></script>
 <script defer src="assets/js/spotter-v8.js"></script>
-</head><body data-page="missions"><header data-site-header></header><main>
-<section class="section" data-spotter-page><div class="container"><div class="section-head"><div><span class="eyebrow">Mission Control</span><h2>Daily Spotter Missions.</h2><p>Approved archive contributions power your progression.</p></div></div><div class="mission-grid" data-missions></div><div class="panel" style="margin-top:18px" data-progress></div></div></section>
-</main><footer data-site-footer></footer></body></html>
+</body></html>

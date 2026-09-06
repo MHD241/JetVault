@@ -1,12 +1,98 @@
 <!doctype html>
-<html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#071019"><title>Games — JetVault</title>
-<meta name="description" content="JetVault aviation photography archive and community.">
-<link rel="icon" href="assets/images/ui/favicon.svg"><link rel="stylesheet" href="assets/css/styles-v7-2.css">
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script defer src="assets/js/config.js"></script><script defer src="assets/js/backend-v7.js"></script><script defer src="assets/js/main.js"></script>
-<script defer src="assets/js/games-v7-1.js"></script>
-</head><body data-page="games"><header data-site-header></header><main>
-<section class="section"><div class="container"><div class="section-head"><div><span class="eyebrow">Hangar games</span><h2>Quick aviation challenges.</h2><p>Three lightweight games — no giant scripts, no waiting.</p></div></div><div class="game-grid" data-games></div></div></section>
-</main><footer data-site-footer></footer></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#06090d"><meta name="description" content="Scottish.aero Games Lab — playable aviation challenges for avgeeks.">
+  <title>Games Lab — Scottish.aero</title>
+  <link rel="icon" href="assets/images/ui/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/css/styles-v7-2.css">
+<link rel="stylesheet" href="assets/css/mobile-v7-3.css"><link rel="stylesheet" href="assets/css/styles-v7-5.css"></head>
+<body class="games-page">
+<div class="page-transition"></div><div class="scroll-progress" data-scroll-progress></div><div class="cursor-glow" data-cursor-glow></div>
+<header class="site-header"><div class="header-inner">
+  <a class="brand" href="index.html"><span class="brand-mark"><svg viewBox="0 0 64 64"><path d="M8 36 27 32 39 18 43 19 37 31 54 32 58 35 54 38 37 39 43 51 39 52 27 40 8 38 4 41 2 39 6 35 2 31 4 29Z" fill="currentColor"/></svg></span><span>Scottish.aero</span></a>
+  <nav class="site-nav" data-nav><a href="gallery.html">Gallery</a><a href="airports.html">Airports</a><a href="photographers.html">Photographers</a><a href="games.html" aria-current="page">Games</a><a href="about.html">About</a></nav>
+  <div class="header-action"><a class="pill-button" href="#games">Choose a game <span>↓</span></a></div>
+  <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle><span></span></button>
+</div></header>
+
+<main class="page-main">
+  <section class="games-hero">
+    <div class="games-grid-bg" aria-hidden="true"></div>
+    <div class="games-radar" aria-hidden="true"><i></i><i></i><i></i><b></b><em></em></div>
+    <div class="site-shell games-hero__inner">
+      <div class="games-hero__copy" data-reveal>
+        <span class="kicker">Scottish.aero / Games Lab</span>
+        <h1>PROVE<br><span>YOU'RE AN</span><br>AVGEEK.</h1>
+        <p>Airlines. Aircraft. Airport codes. Registrations. Manufacturer knowledge. No sign-in, no loading screen — just aviation.</p>
+        <div class="games-hero__actions"><a class="solid-button" href="#games">Start playing</a><a class="outline-button" href="gallery.html">Back to photography</a></div>
+      </div>
+      <div class="games-flight-computer" data-reveal style="--delay:120ms">
+        <div class="games-flight-computer__top"><span><i></i> SYSTEM ONLINE</span><b>SA / LAB 04 · V7</b></div>
+        <div class="games-flight-computer__score"><span>Lifetime XP</span><strong data-lifetime-xp>0000</strong></div>
+        <div class="games-flight-computer__row"><span>Best streak</span><b data-best-streak>0</b></div>
+        <div class="games-flight-computer__row"><span>Games completed</span><b data-games-completed>0</b></div>
+        <div class="games-flight-computer__signal"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+    </div>
+    <div class="games-hero__ticker"><div>IDENTIFY / RECALL / REACT / SPOT / IDENTIFY / RECALL / REACT / SPOT /</div></div>
+  </section>
+
+  <section class="games-hub section" id="games"><div class="site-shell">
+    <div class="section-heading" data-reveal><div><span class="eyebrow">Eleven challenges live · global build</span><h2>Pick your poison.</h2></div><p>Your scores and streaks stay saved on this device. No account required.</p></div>
+    <div class="game-card-grid" data-game-grid>
+      <button class="game-card game-card--logo" data-game="logos" data-reveal>
+        <span class="game-card__number">01</span><div class="game-card__visual game-card__visual--logo"><i></i><b>?</b></div><span class="eyebrow">Archive recognition</span><h3>Guess the Airline</h3><p>Identify the airline from real photographs in the Scottish.aero archive.</p><div class="game-card__footer"><span>7 archive shots</span><strong>PLAY ↗</strong></div>
+      </button>
+      <button class="game-card game-card--plane" data-game="models" data-reveal style="--delay:50ms">
+        <span class="game-card__number">02</span><div class="game-card__visual game-card__visual--plane"><svg viewBox="0 0 240 100" aria-hidden="true"><path d="M8 52 86 44 120 16h15l-15 28 75 3 35 8-35 8-75 3 15 28h-15L86 66 8 58l-8 8v-28Z" fill="currentColor"/></svg></div><span class="eyebrow">Archive recognition</span><h3>Plane Model Quiz</h3><p>Study real Scottish.aero photographs and identify the aircraft model.</p><div class="game-card__footer"><span>6 archive shots</span><strong>PLAY ↗</strong></div>
+      </button>
+      <button class="game-card game-card--code" data-game="codes" data-reveal style="--delay:100ms">
+        <span class="game-card__number">03</span><div class="game-card__visual game-card__visual--code"><b>EDI</b><span>→ ?</span></div><span class="eyebrow">Speed round</span><h3>Airport Code Sprint</h3><p>Match airports and IATA codes before the clock runs out.</p><div class="game-card__footer"><span>45 seconds</span><strong>PLAY ↗</strong></div>
+      </button>
+      <button class="game-card game-card--maker" data-game="makers" data-reveal>
+        <span class="game-card__number">04</span><div class="game-card__visual game-card__visual--maker"><span>737</span><i></i><span>A350</span></div><span class="eyebrow">Rapid fire</span><h3>Manufacturer Rush</h3><p>Boeing, Airbus, Embraer or another builder? Decide fast.</p><div class="game-card__footer"><span>30 seconds</span><strong>PLAY ↗</strong></div>
+      </button>
+      <button class="game-card game-card--reg" data-game="regs" data-reveal style="--delay:50ms">
+        <span class="game-card__number">05</span><div class="game-card__visual game-card__visual--reg"><b>G-</b><span>N-</span><em>A6-</em></div><span class="eyebrow">Registration nerd test</span><h3>Registration Radar</h3><p>Identify the country from the aircraft registration prefix.</p><div class="game-card__footer"><span>12 rounds</span><strong>PLAY ↗</strong></div>
+      </button>
+      <button class="game-card game-card--span" data-game="wingspan" data-reveal style="--delay:100ms">
+        <span class="game-card__number">06</span><div class="game-card__visual game-card__visual--span"><b>A380</b><span>VS</span><b>747-8</b></div><span class="eyebrow">Higher or lower</span><h3>Wingspan Battle</h3><p>Which aircraft is wider? Build the longest streak you can.</p><div class="game-card__footer"><span>Survival</span><strong>PLAY ↗</strong></div>
+      </button>
+      <button class="game-card game-card--history" data-game="firstflight" data-reveal>
+        <span class="game-card__number">07</span><div class="game-card__visual game-card__visual--history"><b>1969</b><span>→</span><b>?</b></div><span class="eyebrow">Aviation history</span><h3>First Flight Duel</h3><p>Two aircraft enter the arena. Pick the one that first flew earlier.</p><div class="game-card__footer"><span>Survival</span><strong>PLAY ↗</strong></div>
+      </button>
+      <button class="game-card game-card--north" data-game="northbound" data-reveal style="--delay:50ms">
+        <span class="game-card__number">08</span><div class="game-card__visual game-card__visual--north"><b>EDI</b><span>↑</span><b>INV</b></div><span class="eyebrow">Airport geography</span><h3>Northbound</h3><p>Which airport sits farther north? One wrong answer ends the run.</p><div class="game-card__footer"><span>Survival</span><strong>PLAY ↗</strong></div>
+      </button>
+
+      <button class="game-card game-card--tail" data-game="tailfin" data-reveal style="--delay:100ms"><span class="game-card__number">09</span><div class="game-card__visual game-card__visual--tail"><b>TAIL</b><i></i></div><span class="eyebrow">Archive crop</span><h3>Tailfin Challenge</h3><p>Real Scottish.aero archive photos, cropped toward the tail. Identify the airline.</p><div class="game-card__footer"><span>Visual ID</span><strong>PLAY ↗</strong></div></button>
+      <button class="game-card game-card--route" data-game="routes" data-reveal><span class="game-card__number">10</span><div class="game-card__visual game-card__visual--route"><b>EDI</b><span>→</span><b>???</b></div><span class="eyebrow">Route logic</span><h3>Route Guessr</h3><p>Airline, direction and flight-time clues. Work out the destination.</p><div class="game-card__footer"><span>8 routes</span><strong>PLAY ↗</strong></div></button>
+      <button class="game-card game-card--daily" data-game="daily" data-reveal style="--delay:50ms"><span class="game-card__number">11</span><div class="game-card__visual game-card__visual--daily"><span>TODAY</span><b>5</b><em>QUESTIONS</em></div><span class="eyebrow">Rotates daily</span><h3>Daily AvGeek</h3><p>Five questions selected from the daily pool. Come back tomorrow for a new set.</p><div class="game-card__footer"><span>Daily challenge</span><strong>PLAY ↗</strong></div></button>
+    </div>
+  </div></section>
+
+  <section class="section section--soft games-achievements"><div class="site-shell">
+    <div class="section-heading section-heading--compact" data-reveal><div><span class="eyebrow">Pilot log</span><h2>Your local achievements.</h2></div><p>These unlock as you play and are stored in your browser.</p></div>
+    <div class="achievement-grid" data-achievements></div>
+  </div></section>
+
+  <section class="section"><div class="site-shell"><div class="games-next" data-reveal>
+    <div><span class="eyebrow">Games Lab / runway ahead</span><h2>Games Lab keeps growing.</h2><p>Eleven challenges are live now — archive photography, airport geography, aviation history, tailfin recognition, route guessing and a rotating Daily AvGeek challenge.</p></div><a class="outline-button" href="photographers.html">Meet the crew</a>
+  </div></div></section>
+
+  <section class="section games-credits-section"><div class="site-shell"><div class="games-image-credits" data-reveal><span class="eyebrow">Wingspan Battle / external image credits</span><p>Most game photography comes from the Scottish.aero archive. Three exact-model Wingspan Battle references come from Wikimedia Commons: <a href="https://commons.wikimedia.org/wiki/File:Lufthansa_Boeing_747-8_(16278574162).jpg" target="_blank" rel="noopener">Boeing 747-8 by Kiefer.</a> (<a href="https://creativecommons.org/licenses/by-sa/2.0/" target="_blank" rel="noopener">CC BY-SA 2.0</a>), <a href="https://commons.wikimedia.org/wiki/File:Emirates_Boeing_777-300.jpg" target="_blank" rel="noopener">Boeing 777-300ER by Dallahi</a> (<a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener">CC0</a>), and <a href="https://commons.wikimedia.org/wiki/File:Airbus_A350-1000_(34598951684).jpg" target="_blank" rel="noopener">Airbus A350-1000 by Clemens Vasters</a> (<a href="https://creativecommons.org/licenses/by/2.0/" target="_blank" rel="noopener">CC BY 2.0</a>). Images are locally resized/compressed for the game; the 747-8 derivative remains CC BY-SA 2.0.</p></div></div></section>
+</main>
+
+<div class="game-modal" data-game-modal aria-hidden="true">
+  <div class="game-modal__backdrop" data-game-close></div>
+  <section class="game-shell" role="dialog" aria-modal="true" aria-labelledby="game-title">
+    <header class="game-shell__header"><div><span class="game-shell__mode" data-game-mode>GAMES LAB</span><h2 id="game-title" data-game-title>Challenge</h2></div><div class="game-shell__hud"><span>Score <b data-game-score>0</b></span><span>Streak <b data-game-streak>0</b></span><span data-game-timer-wrap hidden>Time <b data-game-timer>0</b></span></div><button class="game-close" type="button" aria-label="Close game" data-game-close>×</button></header>
+    <div class="game-progress"><span data-game-progress></span></div>
+    <div class="game-stage" data-game-stage></div>
+  </section>
+</div>
+
+<footer class="site-footer"><div class="site-shell"><div class="footer-top"><div class="footer-brand"><a class="brand" href="index.html"><span class="brand-mark"><svg viewBox="0 0 64 64"><path d="M8 36 27 32 39 18 43 19 37 31 54 32 58 35 54 38 37 39 43 51 39 52 27 40 8 38 4 41 2 39 6 35 2 31 4 29Z" fill="currentColor"/></svg></span><span>Scottish.aero</span></a><p>Aviation photography, crew stories and games by a Scottish aviation group.</p></div><div class="footer-col"><h3>Explore</h3><a href="gallery.html">Gallery</a><a href="airports.html">Airports</a><a href="photographers.html">Photographers</a><a href="games.html">Games Lab</a></div><div class="footer-col"><h3>Scottish.aero</h3><a href="about.html">About the group</a><a href="index.html">Home</a></div></div><div class="footer-bottom"><span>© <span data-year></span> Scottish.aero</span><span>Made in Scotland · for aviation people.</span></div></div></footer>
+<script src="assets/js/config.js" defer></script><script src="assets/js/data-v5-1.js" defer></script><script src="assets/js/backend-v7.js" defer></script><script src="assets/js/auth-hotfix-v7-3-1.js" defer></script><script src="assets/js/main.js" defer></script><script src="assets/js/shell-v7-2.js" defer></script><script src="assets/js/games-v7-1.js" defer></script>
+<script defer src="assets/js/mobile-v7-3.js"></script><script defer src="assets/js/footer-credit-v7-5.js"></script></body>
+</html>
