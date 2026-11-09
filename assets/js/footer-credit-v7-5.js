@@ -60,12 +60,13 @@
         ['index.html','Home'],
         ['gallery.html','Explore'],
         ['photographers.html','Photographers'],
+        ['flight-sim.html','Flight Sim Soon','Flight Sim <i class="nav-soon">Soon</i>'],
         ['account.html?mode=signup','Join']
       ];
       const sig=[...nav.querySelectorAll(':scope > a')].map(a=>`${a.getAttribute('href')}|${(a.textContent||'').trim()}`).join(';;');
       const wanted=desired.map(([href,label])=>`${href}|${label}`).join(';;');
       if(sig!==wanted){
-        nav.innerHTML=desired.map(([href,label])=>{const target=href.split('?')[0];return `<a href="${href}"${current===target?' aria-current="page"':''}>${label}</a>`;}).join('');
+        nav.innerHTML=desired.map(([href,label,html])=>{const target=href.split('?')[0];return `<a href="${href}"${current===target?' aria-current="page"':''}>${html||label}</a>`;}).join('');
       } else {
         nav.querySelectorAll('a').forEach(a=>{const target=(a.getAttribute('href')||'').split('?')[0];if(target===current)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
       }
