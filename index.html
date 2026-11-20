@@ -16,12 +16,15 @@
   <link rel="stylesheet" href="assets/css/styles-v7-5.css">
   <link rel="stylesheet" href="assets/css/jetvault-clean.css">
   <link rel="stylesheet" href="assets/css/domain-launch-v1.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Saira+Condensed:wght@700;800&display=swap">
+  <link rel="stylesheet" href="assets/css/jetvault-redesign.css">
 </head>
 <body class="jv-home">
 <div class="page-transition"></div><div class="scroll-progress" data-scroll-progress></div><div class="cursor-glow" data-cursor-glow></div>
 <header class="site-header"><div class="header-inner">
   <a class="brand" href="index.html" aria-label="Jetvault home"><img class="jv-wordmark" src="assets/images/ui/jetvault-wordmark.png" alt="Jetvault"></a>
-  <nav class="site-nav" data-nav><a href="index.html" aria-current="page">Home</a><a href="gallery.html">Explore</a><a href="photographers.html">Photographers</a><a href="account.html?mode=signup">Join</a></nav>
+  <nav class="site-nav" data-nav><a href="index.html" aria-current="page">Home</a><a href="gallery.html">Explore</a><a href="photographers.html">Photographers</a><a href="flight-sim.html">Flight Sim <i class="nav-soon">Soon</i></a><a href="account.html?mode=signup">Join</a></nav>
   <div class="header-action"><a class="pill-button" href="account.html?mode=signup">Join Jetvault <span>↗</span></a></div>
   <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle><span></span></button>
 </div></header>
@@ -36,8 +39,9 @@
         <h1>A HOME FOR<span>AVIATION.</span></h1>
         <p>Upload your work. Build your own aviation archive. Discover photographers and aircraft from around the world.</p>
         <div class="jv-actions"><a class="solid-button" href="gallery.html">Explore photography</a><a class="outline-button" href="account.html?mode=signup">Join Jetvault</a></div>
-        <a class="jv-domain-chip" href="#domain-launch"><span>NEW</span><b>jetvault.net is live</b><em>↘</em></a>
+        <a class="jv-domain-chip" href="flight-sim.html"><span>SOON</span><b>Jetvault Flight Sim is coming</b><em>↘</em></a>
       </div>
+      <div class="jv-runway" aria-hidden="true"></div>
       <aside class="jv-hero__aside" data-reveal style="--delay:120ms">
         <div class="jv-stat"><span>Approved frames</span><strong data-jv-photo-count>—</strong></div>
         <div class="jv-stat"><span>Photographers</span><strong data-jv-people-count>—</strong></div>
@@ -45,6 +49,28 @@
       </aside>
     </div>
   </section>
+
+  <a class="jv-ticker" href="flight-sim.html" aria-label="Jetvault Flight Sim is coming on 25 February 2027. Post 150 photos, or team up and post 75 each, to get early access.">
+    <div class="jv-ticker__track"><div class="jv-ticker__group"><span>Jetvault Flight Sim is coming</span><span>Launching 25 February 2027</span><span>Post 150 photos, get early access</span><span>Or team up: 75 each</span></div><div class="jv-ticker__group" aria-hidden="true"><span>Jetvault Flight Sim is coming</span><span>Launching 25 February 2027</span><span>Post 150 photos, get early access</span><span>Or team up: 75 each</span></div></div>
+  </a>
+
+  <section class="jv-sim" id="flight-sim"><div class="site-shell">
+    <div class="jv-sim__card" data-reveal>
+      <img class="jv-sim__img" src="assets/images/photos/arran-05-american.webp" alt="" loading="lazy" decoding="async">
+      <div class="jv-sim__body">
+        <span class="sim-badge"><i></i> Coming soon</span>
+        <h2>Jetvault<br>Flight Sim<br>is coming.</h2>
+        <p class="jv-sim__lead">Post 150 photos to Jetvault and get early access, or team up with a friend and post 75 each.</p>
+        <div class="jv-count" data-countdown="2027-02-25T00:00:00Z" role="timer" aria-label="Time until Jetvault Flight Sim launches on 25 February 2027">
+  <div><b data-cd="d">---</b><span>days</span></div>
+  <div><b data-cd="h">--</b><span>hours</span></div>
+  <div><b data-cd="m">--</b><span>minutes</span></div>
+  <div><b data-cd="s">--</b><span>seconds</span></div>
+</div>
+        <div class="jv-actions"><a class="solid-button" href="flight-sim.html">See Flight Sim</a><a class="outline-button tu-link" href="partner.html">Team up <svg class="tu-lock" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M7 10V8a5 5 0 0 1 10 0v2h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1Zm2 0h6V8a3 3 0 0 0-6 0v2Z"/></svg><span class="tu-lock-sr">, locked</span></a></div>
+      </div>
+    </div>
+  </div></section>
 
   <section class="jv-domain-launch" id="domain-launch">
     <div class="site-shell">
@@ -98,9 +124,10 @@
 
 <footer class="site-footer"><div class="site-shell"><div class="footer-top">
   <div class="footer-brand"><a class="brand" href="index.html"><img class="jv-wordmark" src="assets/images/ui/jetvault-wordmark.png" alt="Jetvault"></a><p>A home for aviation photography and the people behind it.</p></div>
-  <div class="footer-col"><h3>Explore</h3><a href="gallery.html">Photography</a><a href="photographers.html">Photographers</a><a href="rules.html">Photo standards</a></div>
+  <div class="footer-col"><h3>Explore</h3><a href="gallery.html">Photography</a><a href="photographers.html">Photographers</a><a href="rules.html">Photo standards</a><a href="flight-sim.html">Flight Sim</a></div>
   <div class="footer-col"><h3>Jetvault</h3><a href="account.html?mode=signup">Join / sign in</a><a href="about.html">About</a><a href="credits.html">Built by Mohammed</a></div>
 </div><div class="footer-bottom"><span>© <span data-year></span> Jetvault</span><span>jetvault.net · Aviation. Shared.</span></div></div></footer>
 
-<script defer src="assets/js/config.js"></script><script defer src="assets/js/data.js"></script><script defer src="assets/js/backend-v7.js"></script><script defer src="assets/js/auth-hotfix-v7-3-1.js"></script><script defer src="assets/js/main.js"></script><script defer src="assets/js/social-v7.js"></script><script defer src="assets/js/shell-v7-2.js"></script><script defer src="assets/js/mobile-v7-3.js"></script><script defer src="assets/js/footer-credit-v7-5.js"></script><script defer src="assets/js/jetvault-home.js"></script>
+<script defer src="assets/js/feature-flags.js"></script><script defer src="assets/js/config.js"></script><script defer src="assets/js/data.js"></script><script defer src="assets/js/backend-v7.js"></script><script defer src="assets/js/auth-hotfix-v7-3-1.js"></script><script defer src="assets/js/main.js"></script><script defer src="assets/js/social-v7.js"></script><script defer src="assets/js/shell-v7-2.js"></script><script defer src="assets/js/mobile-v7-3.js"></script><script defer src="assets/js/footer-credit-v7-5.js"></script><script defer src="assets/js/jetvault-home.js"></script>
+<script defer src="assets/js/jetvault-countdown.js"></script>
 </body></html>
